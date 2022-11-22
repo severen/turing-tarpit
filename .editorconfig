@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2022 Severen Redwood <me@severen.dev>
+# SPDX-FileCopyrightText: 2022 Keetley Rate <fridgeineyes@gmail.com>
+# SPDX-License-Identifier: CC0-1.0
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 2
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+max_line_length = 89
+
+[*.{txt,md}]
+max_line_length = 80

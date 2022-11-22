@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2022 Severen Redwood <me@severen.dev>
+# SPDX-FileCopyrightText: 2022 Keetley Rate <fridgeineyes@gmail.com>
+# SPDX-License-Identifier: CC0-1.0
+
+/package-lock.json
+/pnpm-lock.yaml
+/yarn.lock
+
+/coverage
+/build
+/.svelte-kit
+
+# NOTE: If we start to use custom Netlify functions, then this pattern should
+#       become more specific.
+/.netlify

@@ -1,0 +1,48 @@
+{
+  "name": "turing-tarpit",
+  "author": "Severen Redwood <me@severen.dev>",
+  "contributors": [
+    "Keetley Rate <fridgeineyes@gmail.com"
+  ],
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "lint": "prettier --plugin-search-dir . --check . && eslint .",
+    "format": "prettier --plugin-search-dir . --write .",
+    "prepare": "is-ci || husky install"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.28.0",
+    "@sveltejs/adapter-netlify": "next",
+    "@sveltejs/kit": "next",
+    "@tailwindcss/typography": "^0.5.8",
+    "@typescript-eslint/eslint-plugin": "^5.43.0",
+    "@typescript-eslint/parser": "^5.43.0",
+    "@vitest/coverage-c8": "^0.25.2",
+    "autoprefixer": "^10.4.13",
+    "eslint": "^8.28.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-svelte3": "^4.0.0",
+    "husky": "^8.0.2",
+    "is-ci": "^3.0.1",
+    "playwright": "^1.28.0",
+    "postcss": "^8.4.19",
+    "prettier": "^2.7.1",
+    "prettier-plugin-svelte": "^2.8.1",
+    "svelte": "^3.53.1",
+    "svelte-check": "^2.9.2",
+    "svelte-preprocess": "^4.10.7",
+    "tailwindcss": "^3.2.4",
+    "tslib": "^2.4.1",
+    "typescript": "^4.9.3",
+    "vite": "^3.2.4",
+    "vitest": "^0.25.2"
+  }
+}
