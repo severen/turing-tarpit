@@ -33,13 +33,13 @@ export enum TermKind {
  * Construct a new variable term.
  * @param name The name of this variable.
  */
-export const mkVar = (name: string): Term => ({ kind: TermKind.Var, name });
+export const mkVar = (name: string): Var => ({ kind: TermKind.Var, name });
 /**
  * Construct a new abstraction term.
  * @param head The bound variable.
  * @param body The body term.
  */
-export const mkAbs = (head: string, body: Term): Term => ({
+export const mkAbs = (head: string, body: Term): Abs => ({
   kind: TermKind.Abs,
   head,
   body,
@@ -49,7 +49,7 @@ export const mkAbs = (head: string, body: Term): Term => ({
  * @param left The applicand.
  * @param right The argument.
  */
-export const mkApp = (left: Term, right: Term): Term => ({
+export const mkApp = (left: Term, right: Term): App => ({
   kind: TermKind.App,
   left,
   right,
