@@ -6,30 +6,49 @@
 
 import { describe, expect, it } from "vitest";
 
-import { Parser } from "$lib/lambda/parser";
-import { mkAbs, mkVar } from "$lib/lambda/syntax";
+import { parse } from "$lib/lambda/parser";
+import { mkAbs, mkApp, mkVar } from "$lib/lambda/syntax";
 
-describe("Parser", () => {
+describe("λ-calculus Parser", () => {
   it("parses variables", async () => {
-    const vs = ["f", "g", "h", "x", "y", "z", "α", "β", "γ", "foo"];
+    const vs = ["f", "g", "h", "x", "y", "z", "foo"];
     for (const v of vs) {
-      const parser = new Parser(v);
-      expect(parser.parse()).toEqual(mkVar(v));
+      expect(parse(v)).toEqual(mkVar(v));
     }
   });
 
   it("parses abstractions", async () => {
-    const fs = ["\\x -> x", "λx -> x"];
-    for (const f of fs) {
-      const parser = new Parser(f);
-      expect(parser.parse()).toEqual(mkAbs("x", mkVar("x")));
-    }
+    expect(parse("\\x -> x")).toEqual(mkAbs("x", mkVar("x")));
+  });
+
+  it("parses nested abstractions", async () => {
+    expect(parse("\\f -> \\x -> f")).toEqual(mkAbs("f", mkAbs("x", mkVar("f"))));
+  });
+
+  it("parses applications", async () => {
+    expect(parse("f x")).toEqual(mkApp(mkVar("f"), mkVar("x")));
+  });
+
+  it("parses more applications", async () => {
+    expect(parse("f x y")).toEqual(mkApp(mkApp(mkVar("f"), mkVar("x")), mkVar("y")));
+  });
+
+  it("parses even more applications", async () => {
+    expect(parse("f (g x)")).toEqual(mkApp(mkVar("f"), mkApp(mkVar("g"), mkVar("x"))));
+    expect(parse("f (\\x -> f x)")).toEqual(
+      mkApp(mkVar("f"), mkAbs("x", mkApp(mkVar("f"), mkVar("x")))),
+    );
   });
 
   it("does not parse the empty string", async () => {
-    const parser = new Parser("");
     expect(() => {
-      parser.parse();
+      parse("");
+    }).toThrowErrorMatchingSnapshot();
+  });
+
+  it("consumes the entire input", async () => {
+    expect(() => {
+      parse("this is a valid term but ; is not");
     }).toThrowErrorMatchingSnapshot();
   });
 });
