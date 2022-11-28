@@ -16,9 +16,13 @@ import { isAlpha } from "$lib/util";
 
 /** A syntax error encountered while parsing a λ-calculus program. */
 export class SyntaxError extends Error {
-  constructor(message: string) {
+  /** The start location of this syntax error within the input. */
+  position: number;
+
+  constructor(position: number, message: string) {
     super(message);
     this.name = "SyntaxError";
+    this.position = position;
   }
 }
 
@@ -45,15 +49,14 @@ class Parser {
   /** Parse the input into a λ-calculus term. */
   parse(): Term {
     if (this.#input.length === 0) {
-      throw new SyntaxError("unexpected EOF");
-    } else if (this.#position >= this.#input.length) {
-      // TODO: Do something more sensible here.
-      throw new Error();
+      throw new SyntaxError(this.#position, "unexpected EOF");
+    } else if (this.#isAtEnd()) {
+      throw new Error("programmer error: parser exhausted");
     }
 
     const t = this.#term();
     if (!this.#isAtEnd()) {
-      throw new SyntaxError(`expected EOF, got ${this.#peek()}`);
+      throw new SyntaxError(this.#position, `expected EOF, got ${this.#peek()}`);
     }
     return t;
   }
@@ -71,8 +74,7 @@ class Parser {
   #abs(): Abs {
     this.#consume("\\");
     const head = [];
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    while (!this.#isAtEnd() && isAlpha(this.#peek()!)) {
+    while (isAlpha(this.#peek())) {
       head.push(this.#var().name);
     }
     this.#consume("->");
@@ -93,8 +95,7 @@ class Parser {
     const isAtomPrefix = (char: string): boolean => char === "(" || isAlpha(char);
 
     let lhs = this.#atom();
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    while (!this.#isAtEnd() && isAtomPrefix(this.#peek()!)) {
+    while (isAtomPrefix(this.#peek())) {
       const rhs = this.#atom();
       lhs = mkApp(lhs, rhs);
     }
@@ -125,12 +126,7 @@ class Parser {
     const reIdent = /^[a-zA-Z]+'?/u;
     const matches = this.#input.substring(this.#position).match(reIdent);
     if (!matches) {
-      // TODO: I think this actually might be unreachable in light of how #app
-      // works.
-      // If we find ourselves here, then we must have encountered an
-      // unrecognised token since we would have otherwise already tried to
-      // parse an abstraction or application (see this.#term).
-      throw new SyntaxError(`unexpected token ${this.#peek()}`);
+      throw new SyntaxError(this.#position, `expected identifier, got ${this.#peek()}`);
     }
 
     const ident = matches[0];
@@ -147,7 +143,11 @@ class Parser {
    * Get the character at the current position of the parser, or undefined if
    * the entire input has been consumed.
    */
-  #peek(): string | undefined {
+  #peek(): string {
+    if (this.#isAtEnd()) {
+      return "\0";
+    }
+
     return this.#input[this.#position];
   }
 
@@ -157,7 +157,7 @@ class Parser {
     const end = start + token.length;
     const substring = this.#input.substring(start, end);
     if (substring !== token) {
-      throw new SyntaxError(`expected ${token}, got ${substring}`);
+      throw new SyntaxError(this.#position, `expected ${token}, got ${substring}`);
     }
 
     this.#position += token.length;
