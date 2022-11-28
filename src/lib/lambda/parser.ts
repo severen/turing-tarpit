@@ -5,7 +5,6 @@
  */
 
 import { mkAbs, mkApp, mkVar, type Abs, type Term, type Var } from "$lib/lambda/syntax";
-import { isAlpha } from "$lib/util";
 
 // In EBNF notation, we implement the following grammar for λ-terms:
 // <term> ::= <abstraction> | <application>
@@ -37,6 +36,9 @@ class Parser {
   #input: string;
   /** The current character position of this parser within the input string. */
   #position = 0;
+
+  readonly #reIdent = /^\p{ID_Start}\p{ID_Continue}*'?/u;
+  readonly #reWhitespace = /^\p{Pattern_White_Space}+/u;
 
   /**
    * Construct a new λ-calculus parser.
@@ -72,9 +74,11 @@ class Parser {
 
   /** Parse an abstraction term. */
   #abs(): Abs {
+    const isIdentPrefix = (char: string): boolean => this.#reIdent.test(char);
+
     this.#consume("\\");
     const head = [];
-    while (isAlpha(this.#peek())) {
+    while (isIdentPrefix(this.#peek())) {
       head.push(this.#var().name);
     }
     this.#consume("->");
@@ -92,7 +96,8 @@ class Parser {
 
   /** Parse an application term. */
   #app(): Term {
-    const isAtomPrefix = (char: string): boolean => char === "(" || isAlpha(char);
+    const isAtomPrefix = (char: string): boolean =>
+      char === "(" || this.#reIdent.test(char);
 
     let lhs = this.#atom();
     while (isAtomPrefix(this.#peek())) {
@@ -121,10 +126,7 @@ class Parser {
 
   /** Parse an identifier. */
   #ident(): string {
-    // TODO: Allow Unicode identifiers again.
-    // const reVar = /^\p{XID_Start}\p{XID_Continue}*/u;
-    const reIdent = /^[a-zA-Z]+'?/u;
-    const matches = this.#input.substring(this.#position).match(reIdent);
+    const matches = this.#input.substring(this.#position).match(this.#reIdent);
     if (!matches) {
       throw new SyntaxError(this.#position, `expected identifier, got ${this.#peek()}`);
     }
@@ -140,8 +142,8 @@ class Parser {
   }
 
   /**
-   * Get the character at the current position of the parser, or undefined if
-   * the entire input has been consumed.
+   * Get the character at the current position of the parser, or the null
+   * character if the entire input has been consumed.
    */
   #peek(): string {
     if (this.#isAtEnd()) {
@@ -152,22 +154,21 @@ class Parser {
   }
 
   /** Assert the presence of a lexeme in the input and advance the parser. */
-  #consume(token: string): void {
+  #consume(lexeme: string): void {
     const start = this.#position;
-    const end = start + token.length;
+    const end = start + lexeme.length;
     const substring = this.#input.substring(start, end);
-    if (substring !== token) {
-      throw new SyntaxError(this.#position, `expected ${token}, got ${substring}`);
+    if (substring !== lexeme) {
+      throw new SyntaxError(this.#position, `expected ${lexeme}, got ${substring}`);
     }
 
-    this.#position += token.length;
+    this.#position += lexeme.length;
     this.#discardWhitespace();
   }
 
   /** Advance the parser over whitespace in the input. */
   #discardWhitespace(): void {
-    const reWhitespace = /^\p{Pattern_White_Space}+/u;
-    const matches = this.#input.substring(this.#position).match(reWhitespace);
+    const matches = this.#input.substring(this.#position).match(this.#reWhitespace);
     if (matches) {
       this.#position += matches[0].length;
     }
