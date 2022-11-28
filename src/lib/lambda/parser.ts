@@ -63,7 +63,7 @@ class Parser {
     return t;
   }
 
-  /** Parse a term. */
+  /** Parse the term nonterminal. */
   #term(): Term {
     if (this.#peek() === "\\") {
       return this.#abs();
@@ -72,7 +72,7 @@ class Parser {
     return this.#app();
   }
 
-  /** Parse an abstraction term. */
+  /** Parse the abstraction nonterminal. */
   #abs(): Abs {
     const isIdentPrefix = (char: string): boolean => this.#reIdent.test(char);
 
@@ -94,7 +94,7 @@ class Parser {
       );
   }
 
-  /** Parse an application term. */
+  /** Parse the application nonterminal. */
   #app(): Term {
     const isAtomPrefix = (char: string): boolean =>
       char === "(" || this.#reIdent.test(char);
@@ -108,6 +108,7 @@ class Parser {
     return lhs;
   }
 
+  /** Parse the atom nonterminal. */
   #atom(): Term {
     if (this.#peek() !== "(") {
       return this.#var();
