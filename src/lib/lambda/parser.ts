@@ -65,11 +65,7 @@ class Parser {
 
   /** Parse the term nonterminal. */
   #term(): Term {
-    if (this.#peek() === "\\") {
-      return this.#abs();
-    }
-
-    return this.#app();
+    return this.#peek() === "\\" ? this.#abs() : this.#app();
   }
 
   /** Parse the abstraction nonterminal. */
@@ -121,6 +117,7 @@ class Parser {
     return t;
   }
 
+  /** Parse the variable nonterminal. */
   #var(): Var {
     return mkVar(this.#ident());
   }
@@ -147,11 +144,7 @@ class Parser {
    * character if the entire input has been consumed.
    */
   #peek(): string {
-    if (this.#isAtEnd()) {
-      return "\0";
-    }
-
-    return this.#input[this.#position];
+    return !this.#isAtEnd() ? this.#input[this.#position] : "\0";
   }
 
   /** Assert the presence of a lexeme in the input and advance the parser. */
