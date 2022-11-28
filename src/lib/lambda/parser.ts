@@ -70,18 +70,27 @@ class Parser {
   /** Parse an abstraction term. */
   #abs(): Abs {
     this.#consume("\\");
-    const head = this.#var();
+    const head = [];
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    while (!this.#isAtEnd() && isAlpha(this.#peek()!)) {
+      head.push(this.#var().name);
+    }
     this.#consume("->");
     const body = this.#term();
 
-    return mkAbs(head.name, body);
+    // Here we desugar the multivariate abstraction into a series of nested
+    // single-variable abstractions.
+    return head
+      .slice(0, head.length - 1)
+      .reduceRight(
+        (body, head) => mkAbs(head, body),
+        mkAbs(head[head.length - 1], body),
+      );
   }
 
   /** Parse an application term. */
   #app(): Term {
-    const isAtomPrefix = (char: string): boolean => {
-      return char === "(" || isAlpha(char);
-    };
+    const isAtomPrefix = (char: string): boolean => char === "(" || isAlpha(char);
 
     let lhs = this.#atom();
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

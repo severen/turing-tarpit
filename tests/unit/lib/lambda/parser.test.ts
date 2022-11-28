@@ -10,31 +10,38 @@ import { parse } from "$lib/lambda/parser";
 import { mkAbs, mkApp, mkVar } from "$lib/lambda/syntax";
 
 describe("λ-calculus Parser", () => {
-  it("parses variables", async () => {
-    const vs = ["f", "g", "h", "x", "y", "z", "foo"];
-    for (const v of vs) {
-      expect(parse(v)).toEqual(mkVar(v));
-    }
+  it("parses a single-letter variable", async () => {
+    expect(parse("x")).toEqual(mkVar("x"));
   });
 
-  it("parses abstractions", async () => {
+  it("parses an abstraction", async () => {
     expect(parse("\\x -> x")).toEqual(mkAbs("x", mkVar("x")));
   });
 
-  it("parses nested abstractions", async () => {
+  it("parses a nested abstraction", async () => {
     expect(parse("\\f -> \\x -> f")).toEqual(mkAbs("f", mkAbs("x", mkVar("f"))));
   });
 
-  it("parses applications", async () => {
+  it("parses a multivariate abstraction", async () => {
+    expect(parse("\\f x y -> f x y")).toEqual(
+      mkAbs(
+        "f",
+        mkAbs("x", mkAbs("y", mkApp(mkApp(mkVar("f"), mkVar("x")), mkVar("y")))),
+      ),
+    );
+  });
+
+  it("parses a single application", async () => {
     expect(parse("f x")).toEqual(mkApp(mkVar("f"), mkVar("x")));
   });
 
-  it("parses more applications", async () => {
+  it("parses a chained application", async () => {
     expect(parse("f x y")).toEqual(mkApp(mkApp(mkVar("f"), mkVar("x")), mkVar("y")));
   });
 
-  it("parses even more applications", async () => {
+  it("parses complex terms", async () => {
     expect(parse("f (g x)")).toEqual(mkApp(mkVar("f"), mkApp(mkVar("g"), mkVar("x"))));
+
     expect(parse("f (\\x -> f x)")).toEqual(
       mkApp(mkVar("f"), mkAbs("x", mkApp(mkVar("f"), mkVar("x")))),
     );
