@@ -75,7 +75,7 @@ class Parser {
     this.#consume("\\");
     const head = [];
     while (isIdentPrefix(this.#peek())) {
-      head.push(this.#var().name);
+      head.push(this.#ident());
     }
     this.#consume("->");
     const body = this.#term();
