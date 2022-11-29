@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import { expect, describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { mkVar, mkAbs, mkApp, freeVars } from "$lib/lambda/syntax";
+import { freeVars, mkAbs, mkApp, mkVar } from "$lib/lambda/syntax";
 
 describe("freeVariables", () => {
   it("works for a single variable", async () => {

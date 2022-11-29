@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+import { expect } from "@playwright/test";
+import { chromium, type Browser, type Page } from "playwright";
 import { preview, type PreviewServer } from "vite";
 import { afterAll, beforeAll, describe, test } from "vitest";
-import { chromium, type Browser, type Page } from "playwright";
-import { expect } from "@playwright/test";
 
 describe("home page", async () => {
   let server: PreviewServer;
