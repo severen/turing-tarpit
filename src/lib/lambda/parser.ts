@@ -8,7 +8,7 @@ import { mkAbs, mkApp, mkVar, type Abs, type Term, type Var } from "$lib/lambda/
 
 // In EBNF notation, we implement the following grammar for λ-terms:
 // <term> ::= <abstraction> | <application>
-// <abstraction> ::= "\\" <identifier> "->" <term>
+// <abstraction> ::= "\\" <identifier>+ "->" <term>
 // <application> ::= <application> <atom> | <atom>
 // <atom> ::= <variable> | "(" <term> ")"
 // <variable> ::= <identifier>
