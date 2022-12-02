@@ -5,8 +5,27 @@
 -->
 <script lang="ts">
   import "../main.css";
+
+  import Navbar from "$lib/components/Navbar.svelte";
 </script>
 
-<main class="prose my-4 mx-auto min-h-screen lg:prose-xl">
-  <slot />
-</main>
+<!-- TODO: Adjust the title and description for each page. -->
+<svelte:head>
+  <title>The Turing Tarpit</title>
+  <meta
+    name="description"
+    content="Experiment with the λ-calculus, Turing machines, and automata."
+  />
+</svelte:head>
+
+<div class="min-h-screen bg-white dark:bg-slate-900 dark:text-white">
+  <div class="mx-auto max-w-screen-md p-4">
+    <header>
+      <Navbar />
+    </header>
+
+    <main>
+      <slot />
+    </main>
+  </div>
+</div>

@@ -31,6 +31,6 @@ describe("home page", async () => {
 
   test("index page has expected h1", async () => {
     await page.goto("/");
-    expect(await page.textContent("h1")).toBe("Welcome to the Turing Tarpit!");
+    expect(await page.textContent("h1")).toBe("The Turing Tarpit");
   });
 });

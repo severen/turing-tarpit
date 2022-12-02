@@ -4,4 +4,4 @@
   SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
-<p>There's nothing here yet, but just you wait!</p>
+<p>λ-calculus</p>
