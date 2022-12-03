@@ -18,9 +18,9 @@
   />
 </svelte:head>
 
-<div class="min-h-screen bg-white dark:bg-slate-900 dark:text-white">
+<div class="min-h-screen bg-white antialiased dark:bg-slate-900 dark:text-slate-500">
   <div class="mx-auto max-w-screen-md p-4">
-    <header>
+    <header class="mb-4">
       <Navbar />
     </header>
 
