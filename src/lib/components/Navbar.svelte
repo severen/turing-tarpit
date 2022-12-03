@@ -13,7 +13,7 @@
   ];
 </script>
 
-<div class="mb-4 flex justify-between">
+<div class="flex items-center justify-between text-slate-200">
   <h1 class="font-semibold">
     <a href="/">The Turing Tarpit</a>
   </h1>
@@ -22,9 +22,9 @@
     <ul class="flex space-x-3">
       {#each links as { name, url }}
         {#if $page.url.pathname !== url}
-          <li><a href={url} class="align-middle">{name}</a></li>
+          <li><a href={url}>{name}</a></li>
         {:else}
-          <li><a href={url} class="align-middle text-red-400">{name}</a></li>
+          <li><a href={url} class="text-red-400">{name}</a></li>
         {/if}
       {/each}
     </ul>
