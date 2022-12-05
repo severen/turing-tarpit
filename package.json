@@ -19,6 +19,9 @@
     "prepare": "is-ci || husky install"
   },
   "devDependencies": {
+    "@codemirror/commands": "^6.1.2",
+    "@codemirror/state": "^6.1.4",
+    "@codemirror/view": "^6.6.0",
     "@playwright/test": "1.28.1",
     "@sveltejs/adapter-netlify": "next",
     "@sveltejs/kit": "next",
@@ -26,6 +29,7 @@
     "@typescript-eslint/parser": "^5.45.0",
     "@vitest/coverage-c8": "^0.25.3",
     "autoprefixer": "^10.4.13",
+    "codemirror": "^6.0.1",
     "eslint": "^8.29.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-svelte3": "^4.0.0",
