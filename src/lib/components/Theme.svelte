@@ -58,6 +58,6 @@
   </script>
 </svelte:head>
 
-<div class="bg-white antialiased dark:bg-slate-900 dark:text-slate-500">
+<div class="bg-white antialiased dark:bg-slate-900 dark:text-slate-400">
   <slot />
 </div>
