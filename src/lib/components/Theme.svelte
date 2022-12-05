@@ -8,10 +8,23 @@
 
   import { theme, Theme } from "$lib/stores/theme";
 
+  function setDark(isDark: boolean) {
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }
+
   onMount(() => {
     // If the user's preference is to follow the system theme, then we match
     // the current theme to the system theme.
     const matcher = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = ({ matches: dark }: MediaQueryListEvent) => {
+      if ($theme === Theme.System) {
+        setDark(dark);
+      }
+    };
     matcher.addEventListener("change", handleChange);
 
     // Otherwise, we match the theme to the user's preference of either light
@@ -27,20 +40,6 @@
       matcher.removeEventListener("change", handleChange);
     };
   });
-
-  function handleChange({ matches: dark }: MediaQueryListEvent) {
-    if ($theme === Theme.System) {
-      setDark(dark);
-    }
-  }
-
-  function setDark(isDark: boolean) {
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }
 </script>
 
 <!--
