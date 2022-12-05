@@ -31,7 +31,7 @@
   TODO: Fix the system theme icon flashing before the icon for the user's
         preference.
 -->
-<button title="Cycle Theme" on:click={cycleTheme}>
+<button type="button" title="Cycle Theme" on:click={cycleTheme}>
   {#if $theme === Theme.System}
     <Computer />
   {:else if $theme === Theme.Light}
