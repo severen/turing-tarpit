@@ -6,6 +6,8 @@
 <script lang="ts">
   import { page } from "$app/stores";
 
+  import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
+
   const links = [
     { name: "λ-calculus", url: "/lambda" },
     { name: "Turing Machines", url: "/turing" },
@@ -13,7 +15,7 @@
   ];
 </script>
 
-<div class="flex items-center justify-between text-slate-200">
+<div class="flex items-center justify-between dark:text-slate-200">
   <h1 class="font-semibold">
     <a href="/">The Turing Tarpit</a>
   </h1>
@@ -29,4 +31,6 @@
       {/each}
     </ul>
   </nav>
+
+  <ThemeSwitcher />
 </div>
