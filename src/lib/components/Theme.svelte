@@ -9,9 +9,13 @@
   import { theme, Theme } from "$lib/stores/theme";
 
   onMount(() => {
+    // If the user's preference is to follow the system theme, then we match
+    // the current theme to the system theme.
     const matcher = window.matchMedia("(prefers-color-scheme: dark)");
     matcher.addEventListener("change", handleChange);
 
+    // Otherwise, we match the theme to the user's preference of either light
+    // or dark.
     const unsubscribe = theme.subscribe((newTheme) => {
       if (newTheme !== Theme.System) {
         setDark(newTheme === Theme.Dark);
