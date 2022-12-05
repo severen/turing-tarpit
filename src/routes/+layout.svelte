@@ -6,6 +6,7 @@
 <script lang="ts">
   import "../main.css";
 
+  import Theme from "$lib/components/Theme.svelte";
   import Navbar from "$lib/components/Navbar.svelte";
 </script>
 
@@ -18,14 +19,16 @@
   />
 </svelte:head>
 
-<div class="min-h-screen bg-white antialiased dark:bg-slate-900 dark:text-slate-500">
-  <div class="mx-auto max-w-screen-md p-4">
-    <header class="mb-4">
-      <Navbar />
-    </header>
+<Theme>
+  <div class="min-h-screen">
+    <div class="mx-auto max-w-screen-md p-4">
+      <header class="mb-4">
+        <Navbar />
+      </header>
 
-    <main>
-      <slot />
-    </main>
+      <main>
+        <slot />
+      </main>
+    </div>
   </div>
-</div>
+</Theme>
