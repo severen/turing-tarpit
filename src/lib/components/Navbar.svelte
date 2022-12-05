@@ -6,13 +6,9 @@
 <script lang="ts">
   import { page } from "$app/stores";
 
-  import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
+  import { applications } from "$lib/stores/applications";
 
-  const links = [
-    { name: "λ-calculus", url: "/lambda" },
-    { name: "Turing Machines", url: "/turing" },
-    { name: "Automata", url: "/automata" },
-  ];
+  import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 </script>
 
 <div class="flex items-center justify-between dark:text-slate-200">
@@ -22,11 +18,11 @@
 
   <nav>
     <ul class="flex space-x-3">
-      {#each links as { name, url }}
+      {#each $applications as { name, url }}
         {#if $page.url.pathname !== url}
           <li><a href={url}>{name}</a></li>
         {:else}
-          <li><a href={url} class="text-red-400">{name}</a></li>
+          <li><a href={url} class="text-red-600 dark:text-red-300">{name}</a></li>
         {/if}
       {/each}
     </ul>
