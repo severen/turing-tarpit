@@ -6,11 +6,11 @@
 
 import { describe, expect, it } from "vitest";
 
-import { read_transtion_table, tm_execute } from "$lib/turing/turing";
+import { read_transtion_table, tm_execute, TableReadError } from "$lib/turing/turing";
 
 describe("Transision tables", () => {
   it("Reads the header", async () => {
-    const tm = read_transtion_table(`q0 q1`);
+    const tm = read_transtion_table(`q0 q1`).tm;
     expect(
       tm.start_state === "q0" &&
         tm.accept_states.has("q1") &&
@@ -23,7 +23,7 @@ describe("Transision tables", () => {
     const tm = read_transtion_table(`q0 q1
                                      q0 a b R q0
                                      q0 b a R q0
-                                     q0 _ _ R q1`);
+                                     q0 _ _ R q1`).tm;
     expect(
       tm.delta.size === 1 &&
         tm.delta.get("q0")?.get("a")?.write === "b" &&
@@ -32,6 +32,38 @@ describe("Transision tables", () => {
         tm.delta.get("q1") === undefined,
     ).toEqual(true);
   });
+
+  it("Throws an error when a line has less than 5 items", () => {
+    const result = read_transtion_table(`q0 q1
+                                     q0 a b R q0
+                                     q0 b a q0
+                                     q0 _ _ R q1`);
+    expect(result.error).toEqual(TableReadError.InsufficientItems);
+  });
+
+  it("Throws an error when a move symbol is not R or L", () => {
+    const result = read_transtion_table(`q0 q1
+                                     q0 a b R q0
+                                     q0 b a x q0
+                                     q0 _ _ R q1`);
+    expect(result.error).toEqual(TableReadError.UnexpectedSymbol);
+  });
+
+  it("Throws an error when a transision ends in an undefined state", () => {
+    const result = read_transtion_table(`q0 q1
+                                     q0 a b R q0
+                                     q0 b a L q4
+                                     q0 _ _ R q1`);
+    expect(result.error).toEqual(TableReadError.UndefiniedState);
+  });
+
+  it("Throws an error when a there is more than one transision from a state for the same read symbol", () => {
+    const result = read_transtion_table(`q0 q1
+                                     q0 a b R q0
+                                     q0 a a L q0
+                                     q0 _ _ R q1`);
+    expect(result.error).toEqual(TableReadError.AmbiguousTransistions);
+  });
 });
 
 describe("Execution", () => {
@@ -39,7 +71,7 @@ describe("Execution", () => {
     const tm = read_transtion_table(
       `q0 q1
        q0 _ _ R q1`,
-    );
+    ).tm;
     const result = tm_execute(tm, "");
     expect(result.accept).toEqual("ACCEPT");
     expect(result.on_tape).toEqual("");
@@ -49,7 +81,7 @@ describe("Execution", () => {
     const tm = read_transtion_table(`q0 q1
                                      q0 a b R q0
                                      q0 b a R q0
-                                     q0 _ _ R q1`);
+                                     q0 _ _ R q1`).tm;
     const result = tm_execute(tm, "ababaab");
     expect(result.accept).toEqual("ACCEPT");
     expect(result.on_tape).toEqual("bababba");
@@ -59,13 +91,13 @@ describe("Execution", () => {
     const tm = read_transtion_table(`q0 q1
                                      q0 a b R q0
                                      q0 b a R q0
-                                     q0 _ _ R q1`);
+                                     q0 _ _ R q1`).tm;
     const result = tm_execute(tm, "abbxyy");
     expect(result.accept).toEqual("REJECT");
     expect(result.on_tape).toEqual("baaxyy");
   });
 
-  it("Read and executes a tm that accepts binary palindromes", async () => {
+  it("Reads and executes a tm that accepts binary palindromes", async () => {
     const table = `q0 q6
                    q0 x _ R q1
                    q0 _ _ R q6
@@ -81,7 +113,7 @@ describe("Execution", () => {
                    q4 y y R q4
                    q4 _ _ L q5
                    q5 y _ L q3`;
-    const tm = read_transtion_table(table);
+    const tm = read_transtion_table(table).tm;
     expect(tm_execute(tm, "").accept).toEqual("ACCEPT");
     expect(tm_execute(tm, "xyyx").accept).toEqual("ACCEPT");
     expect(tm_execute(tm, "xyxy").accept).toEqual("REJECT");

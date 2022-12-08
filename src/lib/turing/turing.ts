@@ -6,6 +6,23 @@ export type TM = {
   delta: Map<string, Map<string, TM_Arc>>;
 };
 
+// Enum defining errors that can occur when reading a transistion table for a TM
+export enum TableReadError {
+  Ok,
+  InsufficientItems,
+  UnexpectedSymbol,
+  UndefiniedState,
+  AmbiguousTransistions,
+}
+// Struct for describing the result of reading a transistion table. Contains the resulting delta function,
+// an error code describing the errors (if any) that occured when reading, a message with information
+// about the error and the line number where the error occured.
+export type TM_TableReadResult = {
+  tm: TM;
+  error: TableReadError;
+  msg: string;
+  linenum: number;
+};
 // Struct for defining transisions in a TM
 type TM_Arc = { write: string; move: string; next: string };
 // Struct for specifing a step in a TM's excution
@@ -22,7 +39,6 @@ const new_arc = (write: string, move: string, next: string): TM_Arc => ({
   next,
 });
 
-const STATE_NAME = new RegExp("[A-Z||a-z]+[0-9]*");
 const BLANK = "_";
 const TAPE_CHUNK_LEN = 10;
 const REJECT = "REJECT";
@@ -31,36 +47,28 @@ const ACCEPT = "ACCEPT";
 function check_delta(
   delta: Map<string, Map<string, TM_Arc>>,
   accept_states: Set<string>,
-) {
+): string {
   for (const state of delta.keys()) {
     const arcs = delta.get(state)!;
     for (const read_symbol of arcs.keys()) {
       const arc = arcs.get(read_symbol)!;
       if (!delta.has(arc.next) && !accept_states.has(arc.next)) {
-        throw Error(
-          `Transision (${state}, ${read_symbol}, ${arc.write}, ${arc.move}, ${arc.next}) ends in a non-existant state`,
-        );
+        return `Transision from state ${state} leads to a undefined state`;
       }
     }
   }
+  return "";
 }
 
-function read_transistion(linenum: number, line: string): Array<string> {
+function check_transistion(line: string): TableReadError {
   const items = line.split(" ");
   if (items.length !== 5) {
-    throw Error(`Line ${linenum}: Line must have five items`);
+    return TableReadError.InsufficientItems;
   }
-  const [state, read, write, move, next] = items;
-  if (state.search(STATE_NAME) !== 0) {
-    throw Error(`Line ${linenum}: State name ${state} is not valid`);
+  if (items[3] !== "L" && items[3] !== "R") {
+    return TableReadError.UnexpectedSymbol;
   }
-  if (move !== "L" && move !== "R") {
-    throw Error(`Line ${linenum}: Move symbol must be "L" or "R", found ${items[3]}`);
-  }
-  if (next.search(STATE_NAME) !== 0) {
-    throw Error(`Line ${linenum}: State name ${state} is not valid`);
-  }
-  return [state, read, write, move, next];
+  return TableReadError.Ok;
 }
 
 /** Returns a new TM object from a transistion table of the form
@@ -73,38 +81,64 @@ function read_transistion(linenum: number, line: string): Array<string> {
  *     - The table contains multiple transisions for a state for the same tape symbol.
  *     - The table contains a transision with Nextstate that does not appear elsewhere
  *       in the table.
- *     - A state name doesn't start with a charater
  */
 
-export function read_transtion_table(table: string): TM {
-  for (const name of table.split("\n")[0].split(" ")) {
-    if (name.search(STATE_NAME) !== 0) {
-      throw Error(`Line 1: State name ${name} is not valid`);
-    }
-  }
+export function read_transtion_table(table: string): TM_TableReadResult {
   const header = table.split("\n")[0];
   const start_state = header.split(" ")[0];
   const accept_states = new Set(header.split(" ").slice(1));
   const delta = new Map();
   for (const [linenum, line] of table.split("\n").slice(1).entries()) {
     const trimline = line.trimStart();
-    const [state, read, write, move, next] = read_transistion(linenum, trimline);
+    const line_error = check_transistion(trimline);
+    if (line_error === TableReadError.InsufficientItems) {
+      return {
+        tm: { start_state, accept_states, delta },
+        error: line_error,
+        msg: "Lines must have 5 items",
+        linenum,
+      };
+    }
+    if (line_error === TableReadError.UnexpectedSymbol) {
+      return {
+        tm: { start_state, accept_states, delta },
+        error: line_error,
+        msg: "Move symbol must be L or R",
+        linenum,
+      };
+    }
+    const [state, read, write, move, next] = trimline.split(" ");
     if (delta.has(state)) {
-      const reads: Map<string, TM_Arc> = delta.get(state);
-      if (reads.has(read)) {
-        throw Error(
-          `Line ${linenum}: State ${state} already has a transiton for tape symbol ${read}`,
-        );
+      if (delta.get(state).has(read)) {
+        return {
+          tm: { start_state, accept_states, delta },
+          error: TableReadError.AmbiguousTransistions,
+          msg: `State ${state} already has a transition for tape symbol ${read}`,
+          linenum,
+        };
       }
-      reads.set(read, new_arc(write, move, next));
+      delta.get(state).set(read, new_arc(write, move, next));
     } else {
       const reads = new Map();
       reads.set(read, new_arc(write, move, next));
       delta.set(state, reads);
     }
   }
-  check_delta(delta, accept_states);
-  return { start_state, accept_states, delta };
+  const delta_error = check_delta(delta, accept_states);
+  if (delta_error !== "") {
+    return {
+      tm: { start_state, accept_states, delta },
+      error: TableReadError.UndefiniedState,
+      msg: delta_error,
+      linenum: 0,
+    };
+  }
+  return {
+    tm: { start_state, accept_states, delta },
+    error: TableReadError.Ok,
+    msg: "Ok",
+    linenum: 0,
+  };
 }
 
 function init_tape(input: string): Array<string> {
@@ -163,8 +197,7 @@ export function tm_step(
   };
 }
 
-/** Return A TM_Result object resulting from executing the given TM on the given input string.
- */
+// Return A TM_Result object resulting from executing the given TM on the given input string.
 export function tm_execute(tm: TM, input: string): TM_Result {
   let tape = init_tape(input);
   //Copy input to tape
