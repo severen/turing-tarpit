@@ -10,3 +10,6 @@ node_modules
 # NOTE: If we start to use custom Netlify functions, then this pattern should
 #       become more specific.
 /.netlify
+
+# Finder sucks
+.DS_Store
