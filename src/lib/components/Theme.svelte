@@ -4,42 +4,23 @@
   SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { browser } from "$app/environment";
+  import { isDarkTheme } from "$lib/stores/theme";
 
-  import { theme, Theme } from "$lib/stores/theme";
-
-  function setDark(isDark: boolean) {
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }
-
-  onMount(() => {
-    // If the user's preference is to follow the system theme, then we match
-    // the current theme to the system theme.
-    const matcher = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = ({ matches: dark }: MediaQueryListEvent) => {
-      if ($theme === Theme.System) {
-        setDark(dark);
+  if (browser) {
+    isDarkTheme.subscribe((isDarkTheme) => {
+      const classList = document.documentElement.classList;
+      if (isDarkTheme) {
+        classList.add("dark");
+      } else {
+        classList.remove("dark");
       }
-    };
-    matcher.addEventListener("change", handleChange);
 
-    // Otherwise, we match the theme to the user's preference of either light
-    // or dark.
-    const unsubscribe = theme.subscribe((newTheme) => {
-      if (newTheme !== Theme.System) {
-        setDark(newTheme === Theme.Dark);
-      }
+      return () => {
+        classList.remove("dark");
+      };
     });
-
-    return () => {
-      unsubscribe();
-      matcher.removeEventListener("change", handleChange);
-    };
-  });
+  }
 </script>
 
 <!--

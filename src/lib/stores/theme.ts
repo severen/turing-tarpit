@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import { writable } from "svelte/store";
+import { get, readable, writable } from "svelte/store";
 
 import { browser } from "$app/environment";
 
@@ -18,11 +18,45 @@ export enum Theme {
   Dark = "dark",
 }
 
-const storedTheme = browser ? (localStorage.getItem("theme") as Theme | null) : null;
+const defaultTheme = Theme.System;
 
-/** The current website theme. */
-export const theme = writable(storedTheme || Theme.System);
-if (browser) {
-  // Keep local storage up to date with the user's preferences.
-  theme.subscribe((newTheme) => localStorage.setItem("theme", newTheme));
-}
+/** The current website theme preference. */
+export const theme = (() => {
+  if (browser) {
+    const storedTheme = localStorage.getItem("theme") as Theme | null;
+    const theme = writable(storedTheme || defaultTheme);
+
+    // Keep local storage up to date with the user's preferences.
+    theme.subscribe((newTheme) => localStorage.setItem("theme", newTheme));
+
+    return theme;
+  }
+
+  // On the server, the theme only matters insofar as it is used for prerendering.
+  return writable(defaultTheme);
+})();
+
+/** Whether the website theme is currently in dark mode or not. */
+export const isDarkTheme = readable(
+  browser && document.documentElement.classList.contains("dark"),
+  (set) => {
+    if (browser) {
+      const matcher = window.matchMedia("(prefers-color-scheme: dark)");
+      const handleChange = ({ matches: isDark }: MediaQueryListEvent) => {
+        if (get(theme) === Theme.System) {
+          set(isDark);
+        }
+      };
+      matcher.addEventListener("change", handleChange);
+
+      const unsubscribe = theme.subscribe((newTheme) => {
+        set(newTheme !== Theme.System ? newTheme === Theme.Dark : matcher.matches);
+      });
+
+      return () => {
+        unsubscribe();
+        matcher.removeEventListener("change", handleChange);
+      };
+    }
+  },
+);
