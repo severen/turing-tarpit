@@ -6,7 +6,7 @@
 <script lang="ts">
   import { page } from "$app/stores";
 
-  import { applications } from "$lib/stores/applications";
+  import { applications } from "$lib/applications";
 
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 </script>
@@ -18,7 +18,7 @@
 
   <nav>
     <ul class="flex space-x-3">
-      {#each $applications as { name, url }}
+      {#each applications as { name, url }}
         {#if $page.url.pathname !== url}
           <li><a href={url}>{name}</a></li>
         {:else}

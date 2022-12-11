@@ -4,7 +4,7 @@
   SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 <script lang="ts">
-  import { applications } from "$lib/stores/applications";
+  import { applications } from "$lib/applications";
 </script>
 
 <!-- TODO: Make this prettier. -->
@@ -14,7 +14,7 @@
 
 <p>Choose your application:</p>
 <ul class="ml-4">
-  {#each $applications as { name, description, url }}
+  {#each applications as { name, description, url }}
     <li>
       <a class="hover:text-red-700 dark:hover:text-red-200" href={url}>
         {name} &mdash; {description}
