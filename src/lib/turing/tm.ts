@@ -94,7 +94,7 @@ export function read_transition_table(table: string): TM_TableReadResult {
   const start_state = header.split(" ")[0];
   const accept_states = new Set(header.split(" ").slice(1));
   const delta = new Map();
-  const lines = table.split("\n").slice(1).entries();
+  const lines = Array.from(table.split("\n").slice(1).entries());
   for (const [linenum, line] of lines) {
     const trimline = line.trimStart();
     const line_error = check_transition(trimline);
@@ -167,7 +167,7 @@ export function tm_string(tm: TM): string {
   return outstring;
 }
 
-export function tm_read_result_display(result: TM_TableReadResult): string {
+export function tm_read_result_display(result: TM_TableReadResult): string | undefined {
   if (result.error === TableReadError.Ok) {
     return tm_string(result.tm);
   } else if (result.error === TableReadError.AmbiguousTransitions) {

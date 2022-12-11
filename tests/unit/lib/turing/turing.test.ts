@@ -6,12 +6,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import {
-  read_transition_table,
-  tm_execute,
-  print_tm,
-  TableReadError,
-} from "$lib/turing/tm";
+import { read_transition_table, tm_execute, TableReadError } from "$lib/turing/tm";
 
 describe("Transition tables", () => {
   it("Reads the header", async () => {
