@@ -1,3 +1,9 @@
+/** @license
+ * SPDX-FileCopyrightText: 2022 Severen Redwood <me@severen.dev>
+ * SPDX-FileCopyrightText: 2022 Keetley Rate <fridgeineyes@gmail.com>
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
 // Turing Machine struct
 // delta is a transition function mapping states to maps mapping tape symbols to transition arcs
 export type TM = {
