@@ -45,6 +45,12 @@ const new_arc = (write: string, move: string, next: string): TM_Arc => ({
   next,
 });
 
+export type TM_State = {
+  state: string;
+  head: number;
+  tape: Array<string>;
+};
+
 const BLANK = "_";
 const TAPE_CHUNK_LEN = 10;
 const REJECT = "REJECT";
@@ -95,40 +101,43 @@ export function read_transition_table(table: string): TM_TableReadResult {
   const accept_states = new Set(header.split(" ").slice(1));
   const delta = new Map();
   const lines = Array.from(table.split("\n").slice(1).entries());
+  const lines = table.split("\n").entries();
   for (const [linenum, line] of lines) {
-    const trimline = line.trimStart();
-    const line_error = check_transition(trimline);
-    if (line_error === TableReadError.InsufficientItems) {
-      return {
-        tm: { start_state, accept_states, delta },
-        error: line_error,
-        msg: "Lines must have 5 items",
-        linenum,
-      };
-    }
-    if (line_error === TableReadError.UnexpectedSymbol) {
-      return {
-        tm: { start_state, accept_states, delta },
-        error: line_error,
-        msg: "Move symbol must be L or R",
-        linenum,
-      };
-    }
-    const [state, read, write, move, next] = trimline.split(" ");
-    if (delta.has(state)) {
-      if (delta.get(state).has(read)) {
+    if (linenum > 0) {
+      const trimline = line.trimStart();
+      const line_error = check_transition(trimline);
+      if (line_error === TableReadError.InsufficientItems) {
         return {
           tm: { start_state, accept_states, delta },
-          error: TableReadError.AmbiguousTransitions,
-          msg: `State ${state} already has a transition for tape symbol ${read}`,
+          error: line_error,
+          msg: "Lines must have 5 items",
           linenum,
         };
       }
-      delta.get(state).set(read, new_arc(write, move, next));
-    } else {
-      const reads = new Map();
-      reads.set(read, new_arc(write, move, next));
-      delta.set(state, reads);
+      if (line_error === TableReadError.UnexpectedSymbol) {
+        return {
+          tm: { start_state, accept_states, delta },
+          error: line_error,
+          msg: "Move symbol must be L or R",
+          linenum,
+        };
+      }
+      const [state, read, write, move, next] = trimline.split(" ");
+      if (delta.has(state)) {
+        if (delta.get(state).has(read)) {
+          return {
+            tm: { start_state, accept_states, delta },
+            error: TableReadError.AmbiguousTransitions,
+            msg: `State ${state} already has a transition for tape symbol ${read}`,
+            linenum,
+          };
+        }
+        delta.get(state).set(read, new_arc(write, move, next));
+      } else {
+        const reads = new Map();
+        reads.set(read, new_arc(write, move, next));
+        delta.set(state, reads);
+      }
     }
   }
   const delta_error = check_delta(delta, accept_states);
@@ -137,30 +146,30 @@ export function read_transition_table(table: string): TM_TableReadResult {
       tm: { start_state, accept_states, delta },
       error: TableReadError.UndefinedState,
       msg: delta_error,
-      linenum: lines.length + 1,
+      linenum: 0,
     };
   }
   return {
     tm: { start_state, accept_states, delta },
     error: TableReadError.Ok,
     msg: "Ok",
-    linenum: lines.length + 1,
+    linenum: 0,
   };
 }
 
-export function tm_string(tm: TM): string {
+function tm_string(tm: TM): string {
   let outstring = `Start state: ${tm.start_state}, Accept states: {${Array.from(
     tm.accept_states.values(),
   ).join(",")}}\n`;
   for (const state of tm.delta.keys()) {
     outstring = outstring.concat(
-      `  ${"-".repeat(state.length)}${state}${"-".repeat(state.length)}\n`,
+      `${"-".repeat(state.length)}${state}${"-".repeat(state.length)}\n`,
     );
     const arcs = tm.delta.get(state)!;
     for (const read of arcs.keys()) {
       const transition = arcs.get(read)!;
       outstring = outstring.concat(
-        `    ${read}, ${transition.write}, ${transition.move} -> ${transition.next}\n`,
+        `  ${read}, ${transition.write}, ${transition.move} -> ${transition.next}\n`,
       );
     }
   }
@@ -169,9 +178,30 @@ export function tm_string(tm: TM): string {
 
 export function tm_read_result_display(result: TM_TableReadResult): string | undefined {
   if (result.error === TableReadError.Ok) {
-    return tm_string(result.tm);
-  } else if (result.error === TableReadError.AmbiguousTransitions) {
-    return tm_string(result.tm).concat(`\n ${result.msg}`);
+    return `\nInput Turing Machine\n${"-".repeat(20)}\n` + tm_string(result.tm);
+  } else if (result.error === TableReadError.UndefinedState) {
+    return (
+      "\nRead Turing Machine has undefined state(s)\n" +
+      `${"-".repeat(42)}\n` +
+      result.msg
+    );
+  } else {
+    let outstring =
+      `\n${
+        result.error === TableReadError.AmbiguousTransitions
+          ? "Read Turing Machine has Non-deterministic transitions"
+          : "Read Error"
+      }\n` +
+      "-".repeat(53) +
+      "\n";
+    for (const [i, line] of input.split("\n").entries()) {
+      if (i === result.linenum) {
+        outstring = outstring.concat(line + " <-- " + result.msg + "\n");
+      } else {
+        outstring = outstring.concat(line + "\n");
+      }
+    }
+    return outstring;
   }
 }
 
@@ -218,16 +248,19 @@ export function tm_step(
   state: string,
   tape: Array<string>,
   head: number,
-): TM_Update {
+): TM_State {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const state_lookup = tm.delta.get(state)!; // delta.get(state) is guaranteed to exist as it is checked in check_delta.
   const transition = state_lookup.get(tape[head]);
   if (transition === undefined) {
-    return { next_state: REJECT, head_move: 0 };
+    return { state: REJECT, head, tape };
   }
-  tape[head] = transition!.write;
+  const temp = [...tape];
+  temp[head] = transition.write;
   return {
-    next_state: transition!.next,
-    head_move: transition!.move === "R" ? 1 : -1,
+    state: tm.accept_states.has(transition.next) ? ACCEPT : transition.next,
+    head: head + (transition.move === "R" ? 1 : -1),
+    tape: temp,
   };
 }
 
@@ -257,4 +290,13 @@ export function tm_execute(tm: TM, input: string): TM_Result {
     accept: tm.accept_states.has(state) ? ACCEPT : REJECT,
     on_tape: tape.filter((slot, i, t) => !should_trim(slot, i, t)).join(""),
   };
+}
+
+export function starting_state(tm: TM, input: string): TM_State {
+  const tape = init_tape(input);
+  //Copy input to tape
+  for (let i = 0; i < input.length; i++) {
+    tape[TAPE_CHUNK_LEN + i] = input[i];
+  }
+  return { state: tm.start_state, head: TAPE_CHUNK_LEN, tape };
 }
