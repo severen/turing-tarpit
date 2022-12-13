@@ -12,7 +12,13 @@ export type TM = {
   delta: Map<string, Map<string, TM_Arc>>;
 };
 
-// Enum defining errors that can occur when reading a transition table for a TM
+/**  Enum defining errors that can occur when reading a transition table for a TM these include
+ *     - The table as a line (excluding the header) without 5 items (InsufficientItems).
+ *     - The HeadMove field in a transition is not "L" or "R" (UnexpectedSymbol).
+ *     - The table contains multiple transitions for a state for the same tape symbol (UndefinedState).
+ *     - The table contains a transition with NextState that does not appear elsewhere
+ *       in the table (AmbiguousTransitions).
+ */
 export enum TableReadError {
   Ok,
   InsufficientItems,
@@ -20,7 +26,8 @@ export enum TableReadError {
   UndefinedState,
   AmbiguousTransitions,
 }
-// Struct for describing the result of reading a transition table. Contains the resulting delta function,
+
+// Struct for describing the result of reading a transition table. Contains the resulting TM,
 // an error code describing the errors (if any) that occurred when reading, a message with information
 // about the error and the line number where the error occurred.
 export type TM_TableReadResult = {
@@ -29,13 +36,17 @@ export type TM_TableReadResult = {
   msg: string;
   linenum: number;
 };
+
 // Struct for defining transitions in a TM
 type TM_Arc = { write: string; move: string; next: string };
+
 /** Struct for defining the result of TM's execution.
  *   - accept field is 'ACCEPT' or 'REJECT' based on whether the input was accepted by the TM
  *   - on_tape is a string of symbols that are left on the tape after the TM has halted
+ *   - ONLY used for testing
  */
 type TM_Result = { accept: string; on_tape: string };
+
 // Return and new transition with the given fields
 const new_arc = (write: string, move: string, next: string): TM_Arc => ({
   write,
@@ -43,6 +54,7 @@ const new_arc = (write: string, move: string, next: string): TM_Arc => ({
   next,
 });
 
+// Struct that defines a "state" of a TM's execution. Essentially a "snapshot" at some point during the execution.
 export type TM_State = {
   state: string;
   head: number;
@@ -84,18 +96,11 @@ function check_transition(line: string): TableReadError {
   return TableReadError.Ok;
 }
 
-/** Returns a new TM object from a transition table of the form
+/** Returns a new TM_TableReadResult from a transition table of the form
  *     StartState AcceptState1 AcceptState2 ...
  *     State ReadSymbol WriteSymbol HeadMove NextState
  *     ...
- *   Throws errors when:
- *     - The table as a line (excluding the header) without 5 items.
- *     - The HeadMove field in a transition is not "L" or "R".
- *     - The table contains multiple transitions for a state for the same tape symbol.
- *     - The table contains a transition with NextState that does not appear elsewhere
- *       in the table.
  */
-
 export function read_transition_table(table: string): TM_TableReadResult {
   const header = table.split("\n")[0];
   const start_state = header.split(" ")[0];
@@ -157,6 +162,7 @@ export function read_transition_table(table: string): TM_TableReadResult {
   };
 }
 
+// Return a formatted string of the given TM.
 function tm_string(tm: TM): string {
   let outstring = `Start state: ${tm.start_state}, Accept states: {${Array.from(
     tm.accept_states.values(),
@@ -237,6 +243,7 @@ function should_trim(slot: string, i: number, tape: Array<string>): boolean {
   }
   return true;
 }
+
 function tape_string(tape: Array<string>, head: number): string {
   const spaces = Array(tape.length).fill(" ");
   const temp = [...spaces];

@@ -5,6 +5,8 @@
 -->
 <script lang="ts">
   import Editor from "$lib/components/Editor.svelte";
+  import Button from "$lib/components/Button.svelte";
+
   import {
     starting_state,
     read_transition_table,
@@ -17,6 +19,7 @@
   } from "$lib/turing/tm";
 
   let document: string;
+  let tape_input_string = "";
   let tm_display_string = "";
   let tape_display_string = "";
   let successful_read = false;
@@ -30,12 +33,32 @@
     if (result.error === TableReadError.Ok) {
       tm = result.tm;
       successful_read = true;
-      states = [starting_state(tm, "aabbab")];
+      states = [starting_state(tm, tape_input_string)];
+      display_index = 0;
       tape_display_string = tm_state_display(states[display_index]);
     } else {
       successful_read = false;
       tape_display_string = "";
     }
+  }
+
+  function read_debug() {
+    const tm_str = `q0 q6
+                    q0 x _ R q1
+                    q0 _ _ R q6
+                    q1 x x R q1
+                    q1 y y R q1
+                    q1 _ _ L q2
+                    q2 x _ L q3
+                    q3 x x L q3
+                    q3 y y L q3
+                    q3 _ _ R q0
+                    q0 y _ R q4
+                    q4 x x R q4
+                    q4 y y R q4
+                    q4 _ _ L q5
+                    q5 y _ L q3`;
+    document = tm_str;
   }
 
   function step_back() {
@@ -66,14 +89,10 @@
 
   <br />
 
-  <button
-    type="button"
-    class="mr-2 mb-2 rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700"
-    on:click={read_document}
-  >
-    Read
-  </button>
+  <Button on:click={read_document}>Read</Button>
+  <!-- Just loads the binary palindrome tm into the editor string -->
   <label for="tm-read-output">Read Instructions:</label>
+  <Button on:click={read_debug}>Debug</Button>
 </div>
 
 <div>
@@ -89,20 +108,19 @@
     {tm_display_string}
   </textarea>
 </div>
-<button
-  type="button"
-  class="mr-2 mb-2 rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700"
-  on:click={step_back}
->
-  Step Back
-</button>
-<button
-  type="button"
-  class="mr-2 mb-2 rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700"
-  on:click={step_forward}
->
-  Step Forward
-</button>
+
+<label for="tm-read-string">Tape Input:</label>
+<input
+  class="mr-2 border-2 font-mono text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+  rows={1}
+  cols={15}
+  bind:value={tape_input_string}
+  on:change={read_document}
+/>
+
+<Button on:click={step_back}>Step Back</Button>
+
+<Button on:click={step_forward}>Step Forward</Button>
 
 <div>
   <textarea
