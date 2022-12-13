@@ -31,8 +31,6 @@ export type TM_TableReadResult = {
 };
 // Struct for defining transitions in a TM
 type TM_Arc = { write: string; move: string; next: string };
-// Struct for specifying a step in a TM's execution
-type TM_Update = { next_state: string; head_move: number };
 /** Struct for defining the result of TM's execution.
  *   - accept field is 'ACCEPT' or 'REJECT' based on whether the input was accepted by the TM
  *   - on_tape is a string of symbols that are left on the tape after the TM has halted
@@ -61,8 +59,11 @@ function check_delta(
   accept_states: Set<string>,
 ): string {
   for (const state of delta.keys()) {
+    // At this point the TM has been read correctly so these will exist
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const arcs = delta.get(state)!;
     for (const read_symbol of arcs.keys()) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const arc = arcs.get(read_symbol)!;
       if (!delta.has(arc.next) && !accept_states.has(arc.next)) {
         return `Transition from state ${state} leads to undefined state ${arc.next}.`;
@@ -100,8 +101,7 @@ export function read_transition_table(table: string): TM_TableReadResult {
   const start_state = header.split(" ")[0];
   const accept_states = new Set(header.split(" ").slice(1));
   const delta = new Map();
-  const lines = Array.from(table.split("\n").slice(1).entries());
-  const lines = table.split("\n").entries();
+  const lines = Array.from(table.split("\n").entries());
   for (const [linenum, line] of lines) {
     if (linenum > 0) {
       const trimline = line.trimStart();
@@ -165,8 +165,11 @@ function tm_string(tm: TM): string {
     outstring = outstring.concat(
       `${"-".repeat(state.length)}${state}${"-".repeat(state.length)}\n`,
     );
+    // At this point the TM has been read correctly so these will exist
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const arcs = tm.delta.get(state)!;
     for (const read of arcs.keys()) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const transition = arcs.get(read)!;
       outstring = outstring.concat(
         `  ${read}, ${transition.write}, ${transition.move} -> ${transition.next}\n`,
@@ -176,7 +179,10 @@ function tm_string(tm: TM): string {
   return outstring;
 }
 
-export function tm_read_result_display(result: TM_TableReadResult): string | undefined {
+export function tm_read_result_display(
+  input: string,
+  result: TM_TableReadResult,
+): string {
   if (result.error === TableReadError.Ok) {
     return `\nInput Turing Machine\n${"-".repeat(20)}\n` + tm_string(result.tm);
   } else if (result.error === TableReadError.UndefinedState) {
@@ -231,64 +237,26 @@ function should_trim(slot: string, i: number, tape: Array<string>): boolean {
   }
   return true;
 }
-
-export function tape_string(tape: Array<string>, head: number): string {
+function tape_string(tape: Array<string>, head: number): string {
   const spaces = Array(tape.length).fill(" ");
   const temp = [...spaces];
   temp[head] = "^";
   return tape.join("") + "\n" + temp.join("");
 }
 
-/** Returns a (new_state, head_move) pair resulting from one step of the TM excitation on the given tape.
- *   Also updates the tape appropriately in place. If the TM reads a symbol off the tape that does not
- *   have an associated transition from the current state the next_state will be REJECT.
- */
-export function tm_step(
-  tm: TM,
-  state: string,
-  tape: Array<string>,
-  head: number,
-): TM_State {
+export function tm_step(tm: TM, curr_state: TM_State): TM_State {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const state_lookup = tm.delta.get(state)!; // delta.get(state) is guaranteed to exist as it is checked in check_delta.
-  const transition = state_lookup.get(tape[head]);
+  const state_lookup = tm.delta.get(curr_state.state)!; // delta.get(state) is guaranteed to exist as it is checked in check_delta.
+  const transition = state_lookup.get(curr_state.tape[curr_state.head]);
   if (transition === undefined) {
-    return { state: REJECT, head, tape };
+    return { state: REJECT, head: curr_state.head, tape: curr_state.tape };
   }
-  const temp = [...tape];
-  temp[head] = transition.write;
+  const temp = [...curr_state.tape];
+  temp[curr_state.head] = transition.write;
   return {
     state: tm.accept_states.has(transition.next) ? ACCEPT : transition.next,
-    head: head + (transition.move === "R" ? 1 : -1),
+    head: curr_state.head + (transition.move === "R" ? 1 : -1),
     tape: temp,
-  };
-}
-
-// Return A TM_Result object resulting from executing the given TM on the given input string.
-export function tm_execute(tm: TM, input: string): TM_Result {
-  let tape = init_tape(input);
-  //Copy input to tape
-  for (let i = 0; i < input.length; i++) {
-    tape[TAPE_CHUNK_LEN + i] = input[i];
-  }
-  let head = TAPE_CHUNK_LEN;
-  let state = tm.start_state;
-  while (!tm.accept_states.has(state) && state !== REJECT) {
-    //Get new TM state
-    const update = tm_step(tm, state, tape, head);
-    state = update.next_state;
-    head += update.head_move;
-    //Extend tape if needed
-    if (head < 0 || head >= tape.length) {
-      tape = extend_tape(head, tape);
-      if (head < 0) {
-        head = TAPE_CHUNK_LEN - 1;
-      }
-    }
-  }
-  return {
-    accept: tm.accept_states.has(state) ? ACCEPT : REJECT,
-    on_tape: tape.filter((slot, i, t) => !should_trim(slot, i, t)).join(""),
   };
 }
 
@@ -299,4 +267,30 @@ export function starting_state(tm: TM, input: string): TM_State {
     tape[TAPE_CHUNK_LEN + i] = input[i];
   }
   return { state: tm.start_state, head: TAPE_CHUNK_LEN, tape };
+}
+
+// Return A TM_Result object resulting from executing the given TM on the given input string.
+export function tm_execute(tm: TM, input: string): TM_Result {
+  let current_state = starting_state(tm, input);
+  while (current_state.state !== REJECT && current_state.state !== ACCEPT) {
+    //Get new TM state
+    current_state = tm_step(tm, current_state);
+    //Extend tape if needed
+    if (current_state.head < 0 || current_state.head >= current_state.tape.length) {
+      current_state.tape = extend_tape(current_state.head, current_state.tape);
+      if (current_state.head < 0) {
+        current_state.head = TAPE_CHUNK_LEN - 1;
+      }
+    }
+  }
+  return {
+    accept: current_state.state,
+    on_tape: current_state.tape
+      .filter((slot, i, t) => !should_trim(slot, i, t))
+      .join(""),
+  };
+}
+
+export function tm_state_display(in_state: TM_State) {
+  return tape_string(in_state.tape, in_state.head) + `\nState: ${in_state.state}`;
 }

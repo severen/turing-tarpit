@@ -9,13 +9,12 @@
     starting_state,
     read_transition_table,
     TableReadError,
-    tape_string,
+    tm_state_display,
     tm_read_result_display,
     tm_step,
     type TM,
     type TM_State,
   } from "$lib/turing/tm";
-  //import type { TM_TableReadResult } from "$lib/turing/tm";
 
   let document: string;
   let tm_display_string = "";
@@ -32,9 +31,7 @@
       tm = result.tm;
       successful_read = true;
       states = [starting_state(tm, "aabbab")];
-      tape_display_string =
-        tape_string(states[display_index].tape, states[display_index].head) +
-        `\nState: ${states[display_index].state}`;
+      tape_display_string = tm_state_display(states[display_index]);
     } else {
       successful_read = false;
       tape_display_string = "";
@@ -46,9 +43,7 @@
       tape_display_string = "No Turing machine to run!";
     } else if (display_index > 0) {
       display_index--;
-      tape_display_string =
-        tape_string(states[display_index].tape, states[display_index].head) +
-        `\nState: ${states[display_index].state}`;
+      tape_display_string = tm_state_display(states[display_index]);
     }
   }
 
@@ -56,23 +51,12 @@
     if (!successful_read) {
       tape_display_string = "No Turing machine to run!";
     } else if (display_index === states.length - 1) {
-      states.push(
-        tm_step(
-          tm,
-          states[display_index].state,
-          states[display_index].tape,
-          states[display_index].head,
-        ),
-      );
+      states.push(tm_step(tm, states[display_index]));
       display_index++;
-      tape_display_string =
-        tape_string(states[display_index].tape, states[display_index].head) +
-        `\nState: ${states[display_index].state}`;
+      tape_display_string = tm_state_display(states[display_index]);
     } else {
       display_index++;
-      tape_display_string =
-        tape_string(states[display_index].tape, states[display_index].head) +
-        `\nState: ${states[display_index].state}`;
+      tape_display_string = tm_state_display(states[display_index]);
     }
   }
 </script>
