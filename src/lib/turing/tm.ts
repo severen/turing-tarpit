@@ -23,6 +23,8 @@ export enum TableReadError {
   Ok,
   InsufficientItems,
   UnexpectedSymbol,
+  BadWriteSymbol,
+  BadReadSymbol,
   UndefinedState,
   AmbiguousTransitions,
 }
@@ -36,6 +38,10 @@ export type TM_TableReadResult = {
   msg: string;
   linenum: number;
 };
+
+//Regex for matching read and write strings
+const read_pat = new RegExp(String.raw`^[0-z](\|[0-z])*$`);
+const write_pat = new RegExp("^[0-z]$");
 
 // Struct for defining transitions in a TM
 type TM_Arc = { write: string; move: string; next: string };
@@ -90,10 +96,51 @@ function check_transition(line: string): TableReadError {
   if (items.length !== 5) {
     return TableReadError.InsufficientItems;
   }
+  if (!read_pat.test(items[1])) {
+    return TableReadError.BadReadSymbol;
+  }
+  if (!write_pat.test(items[2])) {
+    return TableReadError.BadWriteSymbol;
+  }
   if (items[3] !== "L" && items[3] !== "R") {
     return TableReadError.UnexpectedSymbol;
   }
   return TableReadError.Ok;
+}
+
+
+
+function process_line_error(line_error: TableReadError, linenum: number, start_state: string, accept_states: Set<string>, delta: Map<string, Map<string, TM_Arc>>): TM_TableReadResult {
+  switch (line_error) {
+    case TableReadError.InsufficientItems:
+      return {
+        tm: { start_state, accept_states, delta },
+        error: line_error,
+        msg: "Lines must have 5 items",
+        linenum,
+      };
+    case TableReadError.UnexpectedSymbol:
+      return {
+        tm: { start_state, accept_states, delta },
+        error: line_error,
+        msg: "Move Symbol must be L or R",
+        linenum,
+      };
+    case TableReadError.BadReadSymbol:
+      return {
+        tm: {start_state, accept_states, delta},
+        error: line_error,
+        msg: "Read instruction must be a|b|c etc.",
+        linenum
+      }
+    case TableReadError.BadWriteSymbol:
+      return {
+        tm: {start_state, accept_states, delta},
+        error: line_error,
+        msg: "Write instruction must be a single symbol",
+        linenum
+      }
+  }
 }
 
 /** Returns a new TM_TableReadResult from a transition table of the form
@@ -107,44 +154,35 @@ export function read_transition_table(table: string): TM_TableReadResult {
   const accept_states = new Set(header.split(" ").slice(1));
   const delta = new Map();
   const lines = Array.from(table.split("\n").entries());
+  //Read in all instructions
   for (const [linenum, line] of lines) {
-    if (linenum > 0) {
+    if (linenum > 0 && line !== "") {
       const trimline = line.trimStart();
       const line_error = check_transition(trimline);
-      if (line_error === TableReadError.InsufficientItems) {
-        return {
-          tm: { start_state, accept_states, delta },
-          error: line_error,
-          msg: "Lines must have 5 items",
-          linenum,
-        };
+      if (line_error !== TableReadError.Ok) {
+        return process_line_error(line_error, linenum, start_state, accept_states, delta);
       }
-      if (line_error === TableReadError.UnexpectedSymbol) {
-        return {
-          tm: { start_state, accept_states, delta },
-          error: line_error,
-          msg: "Move symbol must be L or R",
-          linenum,
-        };
-      }
-      const [state, read, write, move, next] = trimline.split(" ");
-      if (delta.has(state)) {
-        if (delta.get(state).has(read)) {
-          return {
-            tm: { start_state, accept_states, delta },
-            error: TableReadError.AmbiguousTransitions,
-            msg: `State ${state} already has a transition for tape symbol ${read}`,
-            linenum,
-          };
+      const [state, reads, write, move, next] = trimline.split(" ");
+      for (const read of reads.split("|")) {
+        if (delta.has(state)) {
+          if (delta.get(state).has(read)) {
+            return {
+              tm: { start_state, accept_states, delta },
+              error: TableReadError.AmbiguousTransitions,
+              msg: `State ${state} already has a transition for tape symbol ${read}`,
+              linenum,
+            };
+          }
+          delta.get(state).set(read, new_arc(write, move, next));
+        } else {
+          const reads = new Map();
+          reads.set(read, new_arc(write, move, next));
+          delta.set(state, reads);
         }
-        delta.get(state).set(read, new_arc(write, move, next));
-      } else {
-        const reads = new Map();
-        reads.set(read, new_arc(write, move, next));
-        delta.set(state, reads);
       }
     }
   }
+  //Check for undefined states
   const delta_error = check_delta(delta, accept_states);
   if (delta_error !== "") {
     return {
@@ -154,6 +192,7 @@ export function read_transition_table(table: string): TM_TableReadResult {
       linenum: 0,
     };
   }
+  //Ok
   return {
     tm: { start_state, accept_states, delta },
     error: TableReadError.Ok,
