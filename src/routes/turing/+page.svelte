@@ -11,12 +11,11 @@
     starting_state,
     read_transition_table,
     TableReadError,
-    tm_state_display,
-    tm_read_result_display,
     tm_step,
     type TM,
     type TM_State,
   } from "$lib/turing/tm";
+  import { tm_read_result_display, tm_state_display } from "$lib/turing/display";
 
   let document: string;
   let tape_input_string = "";
