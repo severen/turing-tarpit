@@ -108,9 +108,13 @@ function check_transition(line: string): TableReadError {
   return TableReadError.Ok;
 }
 
-
-
-function process_line_error(line_error: TableReadError, linenum: number, start_state: string, accept_states: Set<string>, delta: Map<string, Map<string, TM_Arc>>): TM_TableReadResult {
+function process_line_error(
+  line_error: TableReadError,
+  linenum: number,
+  start_state: string,
+  accept_states: Set<string>,
+  delta: Map<string, Map<string, TM_Arc>>,
+): TM_TableReadResult {
   switch (line_error) {
     case TableReadError.InsufficientItems:
       return {
@@ -128,18 +132,18 @@ function process_line_error(line_error: TableReadError, linenum: number, start_s
       };
     case TableReadError.BadReadSymbol:
       return {
-        tm: {start_state, accept_states, delta},
+        tm: { start_state, accept_states, delta },
         error: line_error,
         msg: "Read instruction must be a|b|c etc.",
-        linenum
-      }
+        linenum,
+      };
     case TableReadError.BadWriteSymbol:
       return {
-        tm: {start_state, accept_states, delta},
+        tm: { start_state, accept_states, delta },
         error: line_error,
         msg: "Write instruction must be a single symbol",
-        linenum
-      }
+        linenum,
+      };
   }
 }
 
@@ -160,7 +164,13 @@ export function read_transition_table(table: string): TM_TableReadResult {
       const trimline = line.trimStart();
       const line_error = check_transition(trimline);
       if (line_error !== TableReadError.Ok) {
-        return process_line_error(line_error, linenum, start_state, accept_states, delta);
+        return process_line_error(
+          line_error,
+          linenum,
+          start_state,
+          accept_states,
+          delta,
+        );
       }
       const [state, reads, write, move, next] = trimline.split(" ");
       for (const read of reads.split("|")) {
