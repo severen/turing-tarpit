@@ -4,7 +4,13 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import { TableReadError, type TM, type TM_State, type TM_TableReadResult } from "./tm";
+import {
+  TableReadError,
+  tm_step,
+  type TM,
+  type TM_State,
+  type TM_TableReadResult,
+} from "./tm";
 
 // Return a formatted string of the given TM.
 function tm_string(tm: TM): string {
@@ -68,6 +74,31 @@ export function tm_read_result_display(
   }
 }
 
-export function tm_state_display(in_state: TM_State) {
-  return tape_string(in_state.tape, in_state.head) + `\nState: ${in_state.state}`;
+export function tm_state_display(tm: TM, in_state: TM_State) {
+  if (in_state.state === "ACCEPT" || in_state.state === "REJECT") {
+    return (
+      tape_string(in_state.tape, in_state.head) +
+      `\nState: ${in_state.state}, Read: !, Write: !, Next: !`
+    );
+  } else {
+    const peek = tm_step(tm, in_state);
+    let write = "";
+    const state_lookup = tm.delta.get(in_state.state);
+    if (state_lookup !== undefined) {
+      const arc = state_lookup.get(in_state.tape[in_state.head]);
+      if (arc !== undefined) {
+        write = arc.write;
+      } else {
+        write = "!";
+      }
+    } else {
+      write = "!";
+    }
+    return (
+      tape_string(in_state.tape, in_state.head) +
+      `\nState: ${in_state.state}, Read: ${
+        in_state.tape[in_state.head]
+      }, Write: ${write}, Next: ${peek.state}`
+    );
+  }
 }

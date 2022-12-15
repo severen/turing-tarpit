@@ -14,6 +14,8 @@
     tm_step,
     type TM,
     type TM_State,
+    extend_tape,
+    TAPE_CHUNK_LEN,
   } from "$lib/turing/tm";
   import { tm_read_result_display, tm_state_display } from "$lib/turing/display";
 
@@ -25,6 +27,7 @@
   let tm: TM;
   let states: Array<TM_State>;
   let display_index = 0;
+  const max_steps = 150;
 
   function read_document() {
     const result = read_transition_table(document);
@@ -34,7 +37,7 @@
       successful_read = true;
       states = [starting_state(tm, tape_input_string)];
       display_index = 0;
-      tape_display_string = tm_state_display(states[display_index]);
+      tape_display_string = tm_state_display(tm, states[display_index]);
     } else {
       successful_read = false;
       tape_display_string = "";
@@ -58,6 +61,7 @@
                     q4 _ _ L q5
                     q5 y _ L q3`;
     document = tm_str;
+    tape_input_string = "xyxxyx";
   }
 
   function step_back() {
@@ -65,7 +69,7 @@
       tape_display_string = "No Turing machine to run!";
     } else if (display_index > 0) {
       display_index--;
-      tape_display_string = tm_state_display(states[display_index]);
+      tape_display_string = tm_state_display(tm, states[display_index]);
     }
   }
 
@@ -73,12 +77,44 @@
     if (!successful_read) {
       tape_display_string = "No Turing machine to run!";
     } else if (display_index === states.length - 1) {
+      //Extend tape if needed
+      if (
+        states[display_index].head < 0 ||
+        states[display_index].head >= states[display_index].tape.length
+      ) {
+        states[display_index].tape = extend_tape(
+          states[display_index].head,
+          states[display_index].tape,
+        );
+        if (states[display_index].head < 0) {
+          states[display_index].head = TAPE_CHUNK_LEN - 1;
+        }
+      }
       states.push(tm_step(tm, states[display_index]));
       display_index++;
-      tape_display_string = tm_state_display(states[display_index]);
+      tape_display_string = tm_state_display(tm, states[display_index]);
     } else {
       display_index++;
-      tape_display_string = tm_state_display(states[display_index]);
+      tape_display_string = tm_state_display(tm, states[display_index]);
+    }
+  }
+
+  function run() {
+    if (!successful_read) {
+      tape_display_string = "No Turning machine to run!";
+    } else {
+      let step = 0;
+      while (
+        states[display_index].state !== "ACCEPT" &&
+        states[display_index].state !== "REJECT"
+      ) {
+        if (step <= max_steps) {
+          step_forward();
+          step++;
+        } else {
+          break;
+        }
+      }
     }
   }
 </script>
@@ -100,7 +136,7 @@
     id="tm-read-output"
     name="tm-read-output"
     rows={10}
-    cols={70}
+    cols={75}
     readonly={true}
     wrap="soft"
   >
@@ -121,13 +157,15 @@
 
 <Button on:click={step_forward}>Step Forward</Button>
 
+<Button on:click={run}>Run</Button>
+
 <div>
   <textarea
     class="mr-2 mb-2 border-2 font-mono text-sm  dark:border-gray-600 dark:bg-gray-800 dark:text-white"
     id="tm-tape"
     name="tm-tape"
     rows={5}
-    cols={70}
+    cols={75}
     readonly={true}
     wrap="soft"
   >

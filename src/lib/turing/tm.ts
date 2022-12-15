@@ -68,7 +68,7 @@ export type TM_State = {
 };
 
 const BLANK = "_";
-const TAPE_CHUNK_LEN = 10;
+export const TAPE_CHUNK_LEN = 10;
 const REJECT = "REJECT";
 const ACCEPT = "ACCEPT";
 
@@ -145,6 +145,12 @@ function process_line_error(
         linenum,
       };
   }
+  return {
+    tm: { start_state, accept_states, delta },
+    error: TableReadError.Ok,
+    msg: "",
+    linenum,
+  };
 }
 
 /** Returns a new TM_TableReadResult from a transition table of the form
@@ -219,7 +225,7 @@ function init_tape(input: string): Array<string> {
   return Array(tape_length).fill(BLANK);
 }
 
-function extend_tape(head: number, tape: Array<string>): Array<string> {
+export function extend_tape(head: number, tape: Array<string>): Array<string> {
   if (head < 0) {
     //head has fallen off the left of the tape, so the head is now at the right end of the new chunk.
     return Array(TAPE_CHUNK_LEN).fill(BLANK).concat(tape);
