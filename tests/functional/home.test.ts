@@ -29,8 +29,9 @@ describe("home page", async () => {
     });
   });
 
+  // TODO: Implement meaningful E2E tests.
   test("index page has expected h1", async () => {
     await page.goto("/");
-    expect(await page.textContent("h1")).toBe("The Turing Tarpit");
+    await expect(page).toHaveTitle("The Turing Tarpit");
   });
 });
