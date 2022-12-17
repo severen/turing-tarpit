@@ -7,13 +7,14 @@
   import { page } from "$app/stores";
 
   import { applications } from "$lib/applications";
-
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
+
+  import logo from "$lib/assets/logo.svg";
 </script>
 
 <div class="flex items-center justify-between dark:text-slate-200">
   <h1 class="font-semibold">
-    <a href="/">The Turing Tarpit</a>
+    <a href="/"><img src={logo} alt="The Turing Tarpit" class="h-10 md:h-20" /></a>
   </h1>
 
   <nav>
