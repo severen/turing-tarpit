@@ -5,14 +5,26 @@
  */
 
 import { assert } from "$lib/assert";
-import { mkAbs, mkApp, mkVar, type Abs, type Term, type Var } from "$lib/lambda/syntax";
+import {
+  mkAbs,
+  mkApp,
+  mkBVar,
+  mkFVar,
+  type Abs,
+  type BVar,
+  type FVar,
+  type Term,
+} from "$lib/lambda/syntax";
 
-// In EBNF notation, we implement the following grammar for λ-terms:
-// <term> ::= <abstraction> | <application>
-// <abstraction> ::= "\\" <identifier>+ "->" <term>
-// <application> ::= <application> <atom> | <atom>
-// <atom> ::= <variable> | "(" <term> ")"
-// <variable> ::= <identifier>
+// In EBNF notation, we parse the following concrete syntax for λ-terms:
+//   <term> ::= <abstraction> | <application>
+//   <abstraction> ::= "\\" <identifier>+ "->" <term>
+//   <application> ::= <application> <atom> | <atom>
+//   <atom> ::= <variable> | "(" <term> ")"
+//   <variable> ::= <identifier>
+//
+// Although the above is the classical named representation of λ-terms, we use a _locally
+// nameless_ internal representation, which is described in $lib/lambda/syntax.ts.
 
 /** A syntax error encountered while parsing a λ-calculus program. */
 export class SyntaxError extends Error {
@@ -37,6 +49,13 @@ class Parser {
   #input: string;
   /** The current character position of this parser within the input string. */
   #position = 0;
+
+  /**
+   * The stack of currently bound variables, where the 'front' of the stack is considered to be index 0
+   *
+   * Note that the length of this stack corresponds to the current _binding depth_.
+   */
+  #bound: string[] = [];
 
   readonly #reIdent = /^\p{ID_Start}\p{ID_Continue}*'?/u;
   readonly #reWhitespace = /^\p{Pattern_White_Space}+/u;
@@ -76,13 +95,21 @@ class Parser {
     this.#consume("\\");
     const head = [];
     while (isIdentPrefix(this.#peek())) {
-      head.push(this.#ident());
+      const name = this.#ident();
+      head.push(name);
     }
-    this.#consume("->");
-    const body = this.#term();
+    // We reverse the head and push to the front to mantain an ordering such that the
+    // most recently bound variables recieve a lower index.
+    this.#bound.unshift(...head.slice().reverse());
 
-    // Here we desugar the multivariate abstraction into a series of nested
-    // single-variable abstractions.
+    this.#consume("->");
+
+    const body = this.#term();
+    head.forEach(() => this.#bound.pop());
+
+    // Since the internal abstract syntax has no notion of multivariate abstraction, we
+    // desugar the multivariate abstraction into a sequence of nested single-variable
+    // abstractions.
     return head
       .slice(0, head.length - 1)
       .reduceRight(
@@ -119,8 +146,15 @@ class Parser {
   }
 
   /** Parse the variable nonterminal. */
-  #var(): Var {
-    return mkVar(this.#ident());
+  #var(): FVar | BVar {
+    const name = this.#ident();
+    return !this.#bound.includes(name)
+      ? // If we have reached this variable without it being bound by an abstraction,
+        // then it _must_ be a free variable.
+        mkFVar(name)
+      : // Otherwise, it is bound, so we consult the binding stack to determine its de
+        // Bruijn index.
+        mkBVar(this.#bound.indexOf(name));
   }
 
   /** Parse an identifier. */
@@ -141,8 +175,8 @@ class Parser {
   }
 
   /**
-   * Get the character at the current position of the parser, or the null
-   * character if the entire input has been consumed.
+   * Get the character at the current position of the parser, or the null character if
+   * the entire input has been consumed.
    */
   #peek(): string {
     return !this.#isAtEnd() ? this.#input[this.#position] : "\0";

@@ -10,9 +10,9 @@
   let document: string;
 
   function parseDocument() {
-    const term = parse(document);
+    const t = parse(document);
     // TODO: Replace this with a parse tree view on the page.
-    console.log(term);
+    console.log(t);
   }
 </script>
 
