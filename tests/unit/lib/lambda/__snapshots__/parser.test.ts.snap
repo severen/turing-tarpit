@@ -1,5 +1,5 @@
 // Vitest Snapshot v1
 
-exports[`λ-calculus Parser > consumes the entire input 1`] = `"expected EOF, got ;"`;
+exports[`λ-calculus parser > consumes the entire input 1`] = `"expected EOF, got ;"`;
 
-exports[`λ-calculus Parser > does not parse the empty string 1`] = `"unexpected EOF"`;
+exports[`λ-calculus parser > does not parse the empty string 1`] = `"unexpected EOF"`;

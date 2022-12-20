@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 import { parse } from "$lib/lambda/parser";
 import { mkAbs, mkApp, mkBVar, mkFVar } from "$lib/lambda/syntax";
 
-describe("λ-calculus Parser", () => {
+describe("λ-calculus parser", () => {
   it("parses a variable", async () => {
     expect(parse("x")).toEqual(mkFVar("x"));
   });

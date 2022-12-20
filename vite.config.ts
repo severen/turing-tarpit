@@ -11,6 +11,7 @@ const config = defineConfig({
   plugins: [sveltekit()],
   test: {
     globals: true,
+    environment: "jsdom",
     testTimeout: 60_000,
     hookTimeout: 60_000,
   },
