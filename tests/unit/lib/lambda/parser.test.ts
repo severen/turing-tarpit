@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 import { parse } from "$lib/lambda/parser";
 import { mkAbs, mkApp, mkBVar, mkFVar } from "$lib/lambda/syntax";
 
-describe("λ-calculus parser", () => {
+describe("λ-term parser", async () => {
   it("parses a variable", async () => {
     expect(parse("x")).toEqual(mkFVar("x"));
   });
@@ -61,10 +61,10 @@ describe("λ-calculus parser", () => {
   });
 
   it("parses a complex term", async () => {
-    expect(parse("(\\x y -> f x y) (\\x -> f)")).toEqual(
+    expect(parse("(\\x -> x) (\\y -> (\\z -> z k) y)")).toEqual(
       mkApp(
-        mkAbs("x", mkAbs("y", mkApp(mkApp(mkFVar("f"), mkBVar(1)), mkBVar(0)))),
-        mkAbs("x", mkFVar("f")),
+        mkAbs("x", mkBVar(0)),
+        mkAbs("y", mkApp(mkAbs("z", mkApp(mkBVar(0), mkFVar("k"))), mkBVar(0))),
       ),
     );
   });

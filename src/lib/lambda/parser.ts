@@ -105,7 +105,7 @@ class Parser {
     this.#consume("->");
 
     const body = this.#term();
-    head.forEach(() => this.#bound.pop());
+    head.forEach(() => this.#bound.shift());
 
     // Since the internal abstract syntax has no notion of multivariate abstraction, we
     // desugar the multivariate abstraction into a sequence of nested single-variable
