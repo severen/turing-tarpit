@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+import { assert } from "$lib/assert";
 import { mkAbs, mkApp, mkVar, type Abs, type Term, type Var } from "$lib/lambda/syntax";
 
 // In EBNF notation, we implement the following grammar for λ-terms:
@@ -52,9 +53,9 @@ class Parser {
   parse(): Term {
     if (this.#input.length === 0) {
       throw new SyntaxError(this.#position, "unexpected EOF");
-    } else if (this.#isAtEnd()) {
-      throw new Error("programmer error: parser exhausted");
     }
+
+    assert(!this.#isAtEnd(), "parser exhausted");
 
     const t = this.#term();
     if (!this.#isAtEnd()) {
