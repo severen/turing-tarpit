@@ -76,14 +76,14 @@ export type App = {
 };
 
 /**
- * Construct a new variable term.
- * @param name The name of this variable.
+ * Construct a new free variable term.
+ * @param name The name of this free variable.
  */
 export const mkFVar = (name: string): FVar => ({ kind: TermKind.FVar, name });
 
 /**
- * Construct a new variable term.
- * @param index The de Bruijn index which represents the variable.
+ * Construct a new bound variable term.
+ * @param index The de Bruijn index which represents the bound variable.
  */
 export const mkBVar = (index: number): BVar => {
   // Paranoid assertion to ensure the provided index is actually a natural
