@@ -18,12 +18,14 @@
     TAPE_CHUNK_LEN,
   } from "$lib/turing/tm";
   import { tm_read_result_display, tm_state_display } from "$lib/turing/display";
+  import GraphCanvas from "$lib/components/GraphCanvas.svelte";
 
   let document: string;
   let tape_input_string = "";
   let tm_display_string = "";
   let tape_display_string = "";
   let successful_read = false;
+  let text_input = true;
   let tm: TM;
   let states: Array<TM_State>;
   let display_index = 0;
@@ -117,12 +119,22 @@
       }
     }
   }
+
+  function switch_input_mode() {
+    text_input = !text_input;
+  }
 </script>
 
 <div>
-  <Editor bind:document />
+  {#if text_input}
+    <Editor bind:document />
+    <br />
+  {:else}
+    <GraphCanvas></GraphCanvas>
+    <br />
+  {/if}
 
-  <br />
+  <Button on:click={switch_input_mode}>{text_input ? "Text" : "Text"}</Button>
 
   <Button on:click={read_document}>Read</Button>
   <!-- Just loads the binary palindrome tm into the editor string -->
