@@ -218,7 +218,10 @@ export function prettyPrint(t: Term): string {
       case TermKind.App: {
         const left = go(t.left, context);
         const right = go(t.right, context);
-        if (t.left.kind === TermKind.Abs && t.right.kind === TermKind.Abs) {
+        if (
+          t.left.kind === TermKind.Abs &&
+          (t.right.kind === TermKind.Abs || t.right.kind === TermKind.App)
+        ) {
           return `(${left}) (${right})`;
         } else if (t.left.kind === TermKind.Abs) {
           return `(${left}) ${right}`;
