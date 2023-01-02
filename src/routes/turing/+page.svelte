@@ -147,8 +147,6 @@
 <label for="tm-read-string">Tape Input:</label>
 <input
   class="mr-2 border-2 font-mono text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-  rows={1}
-  cols={15}
   bind:value={tape_input_string}
   on:change={read_document}
 />
