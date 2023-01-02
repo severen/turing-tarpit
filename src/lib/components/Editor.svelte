@@ -21,7 +21,7 @@
       outline: "unset",
     },
     ".cm-content, .cm-scroller": {
-      fontFamily: "Hack, 'Cascadia Code', 'Jetbrains Mono', Menlo, monospace",
+      fontFamily: "'Cascadia Code', 'Jetbrains Mono', Hack, Menlo, monospace",
     },
   });
 
