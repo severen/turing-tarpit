@@ -18,6 +18,9 @@ import { assert } from "$lib/assert";
 /** A λ-term. */
 export type Term = FVar | BVar | Abs | App;
 
+/** A variable term. */
+export type Var = FVar | BVar;
+
 /** The kind of a Term. */
 export enum TermKind {
   /** A free variable. */
@@ -135,5 +138,35 @@ export function apply(f: (t: Term) => void, root: Term): void {
     } else if (t.kind === TermKind.Abs) {
       todo.push(t.body);
     }
+  }
+}
+
+/**
+ * Apply a function to each variable in the given term.
+ * @param f The function to apply to each term in the syntax tree.
+ * @param t The root term of the syntax tree.
+ */
+export function map(f: (t: Var) => Var, t: Term): Term {
+  switch (t.kind) {
+    case TermKind.FVar:
+    case TermKind.BVar:
+      return f(t);
+    case TermKind.Abs:
+      return mkAbs(t.head, map(f, t.body));
+    case TermKind.App:
+      return mkApp(map(f, t.left), map(f, t.right));
+  }
+}
+
+export function debugPrint(t: Term): string {
+  switch (t.kind) {
+    case TermKind.FVar:
+      return t.name;
+    case TermKind.BVar:
+      return t.index.toString();
+    case TermKind.Abs:
+      return `(λ${t.head} -> ${debugPrint(t.body)})`;
+    case TermKind.App:
+      return `(${debugPrint(t.left)} ${debugPrint(t.right)})`;
   }
 }

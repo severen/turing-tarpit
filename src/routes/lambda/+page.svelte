@@ -4,15 +4,27 @@
   SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 <script lang="ts">
+  import Button from "$lib/components/Button.svelte";
   import Editor from "$lib/components/Editor.svelte";
   import { parse } from "$lib/lambda/parser";
+  import { reduce, step } from "$lib/lambda/reducer";
+  import { debugPrint, type Term } from "$lib/lambda/syntax";
 
   let document: string;
+  let t: Term;
 
   function parseDocument() {
-    const t = parse(document);
+    t = parse(document);
     // TODO: Replace this with a parse tree view on the page.
-    console.log(t);
+    console.log("parsed:", debugPrint(t));
+  }
+
+  function reduceTerm() {
+    console.log("reduced:", debugPrint(reduce(t)));
+  }
+
+  function stepTerm() {
+    console.log("reduced:", debugPrint(step(t)));
   }
 </script>
 
@@ -20,10 +32,6 @@
 
 <br />
 
-<button
-  type="button"
-  class="mr-2 mb-2 rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700"
-  on:click={parseDocument}
->
-  Parse
-</button>
+<Button on:click={parseDocument}>Parse</Button>
+<Button on:click={reduceTerm}>Reduce</Button>
+<Button on:click={stepTerm}>Step</Button>
