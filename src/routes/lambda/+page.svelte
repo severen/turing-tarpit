@@ -8,7 +8,7 @@
   import Editor from "$lib/components/Editor.svelte";
   import { parse } from "$lib/lambda/parser";
   import { reduce, step } from "$lib/lambda/reducer";
-  import { debugPrint, type Term } from "$lib/lambda/syntax";
+  import { debugPrint, prettyPrint, type Term } from "$lib/lambda/syntax";
 
   let document: string;
   let t: Term;
@@ -17,10 +17,12 @@
     t = parse(document);
     // TODO: Replace this with a parse tree view on the page.
     console.log("parsed:", debugPrint(t));
+    console.log("pretty:", prettyPrint(t));
   }
 
   function reduceTerm() {
     console.log("reduced:", debugPrint(reduce(t)));
+    console.log("reduced pretty:", prettyPrint(reduce(t)));
   }
 
   function stepTerm() {

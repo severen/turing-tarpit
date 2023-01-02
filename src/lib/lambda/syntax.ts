@@ -119,30 +119,7 @@ export const mkApp = (left: Term, right: Term): App => ({
 });
 
 /**
- * Apply a function to each term encountered while traversing a syntax tree of
- * terms.
- * @param f The function to apply to each term in the syntax tree.
- * @param root The root term of the syntax tree.
- */
-export function apply(f: (t: Term) => void, root: Term): void {
-  const todo = [root];
-  while (todo.length > 0) {
-    // By the loop condition above, t will never be undefined/null.
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const t = todo.pop()!;
-    f(t);
-
-    if (t.kind === TermKind.App) {
-      todo.push(t.right);
-      todo.push(t.left);
-    } else if (t.kind === TermKind.Abs) {
-      todo.push(t.body);
-    }
-  }
-}
-
-/**
- * Apply a function to each variable in the given term.
+ * Map a function over a term and each of its subterms.
  * @param f The function to apply to each term in the syntax tree.
  * @param t The root term of the syntax tree.
  */
@@ -158,6 +135,44 @@ export function map(f: (t: Var) => Var, t: Term): Term {
   }
 }
 
+/**
+ * Apply a function to a term and each of its subterms.
+ * @param f The function to apply to each term in the syntax tree.
+ * @param t The root term of the syntax tree.
+ */
+export function apply(f: (t: Term) => void, t: Term): void {
+  const todo = [t];
+  while (todo.length > 0) {
+    // By the loop condition above, t will never be undefined/null.
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const t = todo.pop()!;
+    f(t);
+
+    if (t.kind === TermKind.App) {
+      todo.push(t.right);
+      todo.push(t.left);
+    } else if (t.kind === TermKind.Abs) {
+      todo.push(t.body);
+    }
+  }
+}
+
+/** Get the set of free variables in a term.*/
+function freeVariables(t: Term): Set<string> {
+  const freeVars: Set<string> = new Set();
+  apply((t) => {
+    if (t.kind === TermKind.FVar) {
+      freeVars.add(t.name);
+    }
+  }, t);
+
+  return freeVars;
+}
+
+/**
+ * Convert a term to its _debug_ string representation.
+ * @param t The term to convert to a string.
+ */
 export function debugPrint(t: Term): string {
   switch (t.kind) {
     case TermKind.FVar:
@@ -169,4 +184,52 @@ export function debugPrint(t: Term): string {
     case TermKind.App:
       return `(${debugPrint(t.left)} ${debugPrint(t.right)})`;
   }
+}
+
+/**
+ * Convert a term to its _pretty_ string representation.
+ *
+ * Each term is formatted in such a way that:
+ * 1. The internal locally nameless representation is hidden behind
+ *    symbolic names that match the original input as much as possible.
+ * 2. As many superfluous brackets as possible are removed.
+ *
+ * @param t The term to convert to a string.
+ */
+export function prettyPrint(t: Term): string {
+  const go = (t: Term, context: string[]): string => {
+    switch (t.kind) {
+      case TermKind.FVar:
+        return t.name;
+      case TermKind.BVar:
+        // We look up the symbolic name for this variable in the current context.
+        return context[t.index];
+      case TermKind.Abs: {
+        // If the name hint for the variable bound by this abstraction clashes with
+        // a free variable in its body, we choose a new, derived name.
+        const newContext = [t.head, ...context];
+        const freeVars = freeVariables(t.body);
+        while (freeVars.has(newContext[0])) {
+          newContext[0] += "'";
+        }
+
+        return `λ${newContext[0]} -> ${go(t.body, newContext)}`;
+      }
+      case TermKind.App: {
+        const left = go(t.left, context);
+        const right = go(t.right, context);
+        if (t.left.kind === TermKind.Abs && t.right.kind === TermKind.Abs) {
+          return `(${left}) (${right})`;
+        } else if (t.left.kind === TermKind.Abs) {
+          return `(${left}) ${right}`;
+        } else if (t.right.kind === TermKind.App) {
+          return `${left} (${right})`;
+        }
+
+        return `${left} ${right}`;
+      }
+    }
+  };
+
+  return go(t, []);
 }
