@@ -130,7 +130,7 @@
     <Editor bind:document />
     <br />
   {:else}
-    <GraphCanvas></GraphCanvas>
+    <GraphCanvas />
     <br />
   {/if}
 

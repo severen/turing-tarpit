@@ -4,11 +4,10 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import { getContext, onMount, onDestroy } from 'svelte';
-import { writable, derived } from 'svelte/store';
+import { getContext, onMount, onDestroy } from "svelte";
+import { writable, derived } from "svelte/store";
 
 export const width = 732;
 export const height = 172;
 export const context = writable();
 export const canvas = writable();
-
