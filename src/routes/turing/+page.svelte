@@ -134,7 +134,7 @@
     <br />
   {/if}
 
-  <Button on:click={switch_input_mode}>{text_input ? "Text" : "Text"}</Button>
+  <Button on:click={switch_input_mode}>{text_input ? "Text" : "Graph"}</Button>
 
   <Button on:click={read_document}>Read</Button>
   <!-- Just loads the binary palindrome tm into the editor string -->

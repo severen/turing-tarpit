@@ -11,3 +11,9 @@ export const width = 732;
 export const height = 172;
 export const context = writable();
 export const canvas = writable();
+
+export type Vec2d = { x: number; y: number };
+
+export type Node = { pos: Vec2d, label: string };
+
+export const new_node = (center: Vec2d): Node => ({ pos: center, label: ""});
