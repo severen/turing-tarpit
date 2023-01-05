@@ -12,7 +12,10 @@
     context as contextStore,
     type Node,
     new_node,
-    type Vec2d
+    type Vec2d,
+    type Edge,
+    new_edge,
+    draw_edge
   } from "$lib/turing/graph";
 
 
@@ -21,6 +24,7 @@
   let context: CanvasRenderingContext2D;
 
   let mouse = { x: 0, y: 0 };
+  let last_mouse = {x: 0, y: 0};
   let mouse_down_pos = { x: 0, y: 0 };
   let moving = false;
   let node_radius = 20;
@@ -29,15 +33,18 @@
   let last_mouse_down: number;
   let moving_node_index: number;
 
-  let edit_index: number;
+  let edit_index = -1;
+  let last_clicked_node = -1;
 
 
   let nodes: Array<Node> = [];
+  let edges: Array<Edge> = [];
 
   onMount(() => {
     context = canvas.getContext("2d")!;
     canvasStore.set(canvas);
     contextStore.set(context);
+    context.font = "10px serif";
   });
 
   function in_circle(center: Vec2d, radius: number, mouse: Vec2d): boolean {
@@ -60,7 +67,7 @@
 
     //Draw nodes
     for (const [i, node] of nodes.entries()) {
-      if (mouse_down && in_circle(node.pos, node_radius, mouse) || i === edit_index) {
+      if (i === last_clicked_node) {
         context.strokeStyle = "#727272";
       } else {
         context.strokeStyle = "#FFFFFF";
@@ -69,6 +76,10 @@
       context.arc(node.pos.x, node.pos.y, node_radius, 0, 2 * Math.PI, true);
       context.closePath();
       context.stroke();
+      context.fillText(node.label, node.pos.x, node.pos.y)
+    }
+    for (const edge of edges) {
+      draw_edge(context, edge, node_radius);
     }
 
   }
@@ -77,6 +88,10 @@
   function double_click(): boolean {
     const dt = performance.now() - last_mouse_down;
     return dt > 0 && dt < 250
+  }
+
+  function mouse_moved(): boolean {
+    return mouse.x !== last_mouse.x || mouse.y !== last_mouse.y;
   }
 
   function handle_mouse_move({
@@ -104,32 +119,47 @@
   }
 
   function handle_mouse_down(event: any) {
-    handle_mouse_move(event);
     mouse_down = true;
     const selected_index = selected_node(nodes, mouse);
-    // User is moving a node around
+    // Move node with mouse
     if (selected_index >= 0) {
       mouse_down_pos.x = mouse.x;
       mouse_down_pos.y = mouse.y;
       moving = true;
       moving_node_index = selected_index;
+      last_mouse.x = mouse.x;
+      last_mouse.y = mouse.y;
     }
+    handle_mouse_move(event);
     if (double_click()) {
-      if (selected_index >= 0) {
+      if (selected_index >= 0) { // Edit node label
         edit_index = selected_index;
-      } else {
+      } else { // Create a new node
         nodes.push(new_node({x: mouse.x, y: mouse.y}));
-        edit_index = nodes.length - 1;
+        edit_index = -1;
+        last_clicked_node = -1;
       }
-    } else {
+    }
+    else { // Unselect node
       edit_index = -1;
     }
-
     last_mouse_down = performance.now();
     redraw();
   }
 
   function handle_mouse_up(event: any) {
+    handle_mouse_move(event);
+    const i = selected_node(nodes, mouse);
+    if (i >= 0 && !mouse_moved()) {
+      if (last_clicked_node === -1) {
+        last_clicked_node = i;
+      } else {
+        edges.push(new_edge(nodes[last_clicked_node], nodes[i]));
+        last_clicked_node = -1;
+      }
+    } else {
+      last_clicked_node = -1;
+    }
     mouse_down = false;
     moving = false;
     redraw();
