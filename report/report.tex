@@ -1,0 +1,57 @@
+% SPDX-FileCopyrightText: 2022 Severen Redwood <me@severen.dev>
+% SPDX-License-Identifier: CC-BY-SA-4.0
+
+\documentclass[headings=standardclasses]{scrartcl}
+
+\input{preamble.tex}
+
+\usepackage[style=alphabetic]{biblatex}
+\addbibresource{references.bib}
+
+\setmainfont{TeX Gyre Pagella}
+\setmathfont{TeX Gyre Pagella Math}
+
+% Theorem-style Environments
+\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
+\theoremstyle{definition}
+\newtheorem{definition_internal}{Definition}
+% Wrapper around definition_internal for adding an "end of definition" symbol.
+\newenvironment{definition}
+  {\renewcommand{\qedsymbol}{$\triangle$}%
+   \pushQED{\qed}\begin{definition_internal}}
+  {\popQED\end{definition_internal}}
+\newtheorem*{remark}{Remark}
+\newtheorem*{note}{Note}
+\newtheorem{example}{Example}
+
+% PDF Metadata
+\hypersetup{
+  pdftitle={Strategies for Representing λ-Terms}
+}
+
+\title{Strategies for Representing λ-Terms}
+\author{Severen Redwood \\ {\small Supervisor: Robert Culling}}
+% TODO: Update with actual date this report was submitted.
+\date{11th February 2023}
+
+\begin{document}
+
+% NOTE: This should be in the preamble, but for some reason it only works *within* the
+% document environment...
+% I prefer the slanted <= and >= variants.
+\let\oldleq=\leq{}
+\let\oldgeq=\geq{}
+\renewcommand{\leq}{\leqslant}
+\renewcommand{\geq}{\geqslant}
+
+\maketitle
+
+\section{Background}
+
+In this section I will give a brief introduction to the λ-calculus. I will cite
+both \textcite{hindley_seldin} and \textcite{pierce}.
+
+\printbibliography[heading=bibintoc]
+
+\end{document}

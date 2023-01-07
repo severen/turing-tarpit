@@ -1,0 +1,90 @@
+% SPDX-FileCopyrightText: 2022 Severen Redwood <me@severen.dev>
+% SPDX-License-Identifier: CC0-1.0
+
+%% Common Packages and Configuration
+
+%% Layout and Style %%
+\usepackage{minted}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{bookmark}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+  pdfauthor={Severen Redwood},
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue,
+}
+
+%% Typography %%
+\usepackage{fontspec}
+\usepackage{microtype}
+\usepackage{siunitx}
+
+%% Maths %%
+\usepackage{mathtools}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{unicode-math}
+
+% NOTE: cleveref must be loaded here.
+\usepackage{cleveref}
+
+% Special sets
+% Usual numbers N, Z, Q, R, and C
+\newcommand*{\N}{\mathbb{N}}
+\newcommand*{\Z}{\mathbb{Z}}
+\newcommand*{\Q}{\mathbb{Q}}
+\newcommand*{\R}{\mathbb{R}}
+\newcommand*{\C}{\mathbb{C}}
+% Arbitrary fields
+\newcommand*{\F}{\mathbb{F}}
+% Circle
+\newcommand*{\Si}{\mathbb{S}}
+% Torus (n-Torus)
+\newcommand*{\T}{\mathbb{}}
+
+% Matrix groups GL and SL
+\DeclareMathOperator{\GL}{GL}
+\DeclareMathOperator{\SL}{SL}
+
+% Domain, codomain, and image
+\DeclareMathOperator{\dom}{dom}
+\DeclareMathOperator{\cod}{cod}
+\DeclareMathOperator{\im}{im}
+
+% Operations
+% Permutations
+\newcommand*{\perm}[2]{\prescript{#1}{}P_{#2}}
+% Combinations
+\newcommand*{\comb}[2]{\prescript{#1}{}C_{#2}}
+% Complex conjugate
+\newcommand*{\conj}[1]{\overbar{#1}}
+
+% Paired operations
+\DeclarePairedDelimiter{\card}{\lvert}{\rvert}
+\DeclarePairedDelimiter{\ord}{\lvert}{\rvert}
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+\DeclarePairedDelimiter{\norm}{\lVert}{\rVert}
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+\DeclarePairedDelimiter{\floor}{\lfloor}{\rfloor}
+\DeclarePairedDelimiter{\cyclic}{\langle}{\rangle}
+
+% Relations
+\newcommand*{\divides}{\mathrel{\mid}}
+\newcommand*{\notdivides}{\mathrel{\nmid}}
+\newcommand*{\subgroup}{<}
+\newcommand*{\subgroupeq}{\leq}
+\newcommand*{\nsubgroup}{\triangleleft}
+\newcommand*{\nsubgroupeq}{\trianglelefteq}
+
+% Binary and hexadecimal numbers
+\newcommand*{\bin}[1]{#1_2}
+\newcommand*{\hex}[1]{\mathrm{#1}_{16}}
+
+%% Language %%
+\usepackage{csquotes}
+\usepackage{polyglossia}
+\setdefaultlanguage[variant=newzealand, ordinalmonthday]{english}
