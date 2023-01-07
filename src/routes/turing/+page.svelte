@@ -147,7 +147,7 @@
     class="mr-2 mb-2 border-2 font-mono text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
     id="tm-read-output"
     name="tm-read-output"
-    rows={10}
+    rows={text_input ? 10 : 1}
     cols={75}
     readonly={true}
     wrap="soft"

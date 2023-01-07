@@ -10,23 +10,17 @@
     height,
     canvas as canvasStore,
     context as contextStore,
-    type Node,
-    new_node,
-    type Vec2d,
-    type Edge,
-    new_edge,
     draw_edge,
-    edge_label_bounding_box
-  } from "$lib/turing/graph";
-
-
+    edge_label_bounding_box,
+    draw_node
+  } from "$lib/turing/graph/drawing";
+  import { in_circle, in_rect, new_node, type Node, type Edge, type Vec2d, new_edge } from "$lib/turing/graph/logic";
 
   let canvas: HTMLCanvasElement;
   let context: CanvasRenderingContext2D;
 
   let mouse = { x: 0, y: 0 };
-  let last_mouse = {x: 0, y: 0};
-  let mouse_down_pos = { x: 0, y: 0 };
+  let last_mouse = { x: 0, y: 0 };
   let node_moving = false;
   let edge_moving = false;
   let node_radius = 20;
@@ -41,11 +35,10 @@
   let last_clicked_node = -1;
 
   let key_down: string;
-  let key_code: string;
-
 
   let nodes: Array<Node> = [];
   let edges: Array<Edge> = [];
+  let num_nodes = 0;
 
   onMount(() => {
     context = canvas.getContext("2d")!;
@@ -53,14 +46,6 @@
     contextStore.set(context);
     context.font = "15px mono";
   });
-
-  function in_circle(center: Vec2d, radius: number, mouse: Vec2d): boolean {
-    return (center.x - mouse.x) ** 2 + (center.y - mouse.y) ** 2 <= radius ** 2;
-  }
-
-  function in_rect(top_left: Vec2d, w: number, h: number, mouse: Vec2d): boolean {
-    return mouse.x >= top_left.x && mouse.x <= top_left.x + w && mouse.y >= top_left.y && mouse.y <= top_left.y + h;
-  }
 
   // Return the index of the node the mouse is in, otherwise return -1
   function selected_node(nodes: Array<Node>, mouse: Vec2d): number {
@@ -87,29 +72,26 @@
     context.clearRect(0, 0, width, height);
     context.lineWidth = 2;
 
-    //Draw nodes
-    for (const [i, node] of nodes.entries()) {
-      if (i === last_clicked_node) {
-        context.strokeStyle = "#727272";
-      } else {
-        context.strokeStyle = "#FFFFFF";
-      }
-      context.beginPath();
-      context.arc(node.pos.x, node.pos.y, node_radius, 0, 2 * Math.PI, true);
-      context.closePath();
-      context.stroke();
-      context.fillText(node.label, node.pos.x, node.pos.y)
-    }
+    //Draw edges
     for (const [i, edge] of edges.entries()) {
       draw_edge(context, edge, node_radius, i === edit_edge_index);
     }
 
+    //Draw nodes
+    for (const [i, node] of nodes.entries()) {
+      draw_node(
+        context,
+        node,
+        node_radius,
+        i === edit_node_index,
+        i === last_clicked_node,
+      );
+    }
   }
-
 
   function double_click(): boolean {
     const dt = performance.now() - last_mouse_down;
-    return dt > 0 && dt < 250
+    return dt > 0 && dt < 250;
   }
 
   function mouse_moved(): boolean {
@@ -165,17 +147,24 @@
 
     handle_mouse_move(event);
     if (double_click()) {
-      if (selected_node_index >= 0) { // Edit node label
+      if (selected_node_index >= 0) {
+        // Edit node label
         edit_node_index = selected_node_index;
+        edit_edge_index = -1;
       } else if (selected_edge_index >= 0) {
         edit_edge_index = selected_edge_index;
-      } else { // Create a new node
-        nodes.push(new_node({x: mouse.x, y: mouse.y}));
+        edit_node_index = -1;
+      } else {
+        // Create a new node
+        nodes.push(new_node({ x: mouse.x, y: mouse.y }));
+        nodes[nodes.length - 1].label = `q${num_nodes}`
+        num_nodes += 1;
         edit_node_index = -1;
         last_clicked_node = -1;
+        edit_edge_index = -1;
       }
-    }
-    else { // Unselect nodes and edges
+    } else {
+      // Unselect nodes and edges
       edit_node_index = -1;
       edit_edge_index = -1;
     }
@@ -204,15 +193,20 @@
 
   function handle_key_down(event: any) {
     key_down = event.key;
-    key_code = event.code;
+    let obj: Node | Edge | undefined;
     if (edit_edge_index >= 0) {
-      if (key_down === "Backspace" && edges[edit_edge_index].label.length > 0) {
-        edges[edit_edge_index].label = edges[edit_edge_index].label.slice(0, edges[edit_edge_index].label.length - 1);
-        redraw();
-      } else if (key_down.length === 1) {
-        edges[edit_edge_index].label = edges[edit_edge_index].label.concat(key_down);
-        redraw();
-      }
+      obj = edges[edit_edge_index];
+    } else if (edit_node_index >= 0) {
+      obj = nodes[edit_node_index];
+    } else {
+      return;
+    }
+    if (key_down === "Backspace" && obj.label.length > 0) {
+      obj.label = obj.label.slice(0, obj.label.length - 1);
+      redraw();
+    } else if (key_down.length === 1) {
+      obj.label = obj.label.concat(key_down);
+      redraw();
     }
   }
 </script>
