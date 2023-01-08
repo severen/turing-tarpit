@@ -14,13 +14,18 @@ export const normed = (u: Vec2d) => times(1 / norm(u), u);
 
 export type LabelBoundingBox = { top_left: Vec2d; width: number; height: number };
 
-export type Node = { pos: Vec2d; label: string };
-export type Edge = { node1: Node; node2: Node; label: string; h: number };
+export type Node = { id: number; pos: Vec2d; label: string; is_accept: boolean };
+export type Edge = { tail: Node; head: Node; label: string; h: number };
 
-export const new_node = (center: Vec2d): Node => ({ pos: center, label: "" });
-export const new_edge = (node1: Node, node2: Node): Edge => ({
-  node1,
-  node2,
+export const new_node = (id: number, center: Vec2d): Node => ({
+  id,
+  pos: center,
+  label: "",
+  is_accept: false,
+});
+export const new_edge = (tail: Node, head: Node): Edge => ({
+  tail,
+  head,
   label: "",
   h: 0,
 });
@@ -36,4 +41,23 @@ export function in_rect(top_left: Vec2d, w: number, h: number, mouse: Vec2d): bo
     mouse.y >= top_left.y &&
     mouse.y <= top_left.y + h
   );
+}
+
+export function remove_node(
+  nodes: Map<number, Node>,
+  edges: Map<number, Edge>,
+  node_id: number,
+) {
+  //Remove edges that the node is the tail of
+  for (const [id, edge] of edges.entries()) {
+    if (edge.tail.id === node_id || edge.head.id === node_id) {
+      edges.delete(id);
+    }
+  }
+  //Remove node from node set
+  nodes.delete(node_id);
+}
+
+export function remove_edge(edges: Map<number, Edge>, edge_id: number) {
+  edges.delete(edge_id);
 }

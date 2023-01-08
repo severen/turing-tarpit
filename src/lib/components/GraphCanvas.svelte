@@ -12,9 +12,20 @@
     context as contextStore,
     draw_edge,
     edge_label_bounding_box,
-    draw_node
+    draw_node,
+    draw_start_arrow,
   } from "$lib/turing/graph/drawing";
-  import { in_circle, in_rect, new_node, type Node, type Edge, type Vec2d, new_edge } from "$lib/turing/graph/logic";
+  import {
+    in_circle,
+    in_rect,
+    new_node,
+    type Node,
+    type Edge,
+    type Vec2d,
+    new_edge,
+    remove_node,
+    remove_edge,
+  } from "$lib/turing/graph/logic";
 
   let canvas: HTMLCanvasElement;
   let context: CanvasRenderingContext2D;
@@ -33,12 +44,13 @@
   let edit_node_index = -1;
   let edit_edge_index = -1;
   let last_clicked_node = -1;
+  let last_clicked_edge = -1;
 
-  let key_down: string;
-
-  let nodes: Array<Node> = [];
-  let edges: Array<Edge> = [];
-  let num_nodes = 0;
+  let node_count = -1;
+  let edge_count = -1;
+  let start_state = -1;
+  let nodes: Map<number, Node> = new Map();
+  let edges: Map<number, Edge> = new Map();
 
   onMount(() => {
     context = canvas.getContext("2d")!;
@@ -47,18 +59,28 @@
     context.font = "15px mono";
   });
 
-  // Return the index of the node the mouse is in, otherwise return -1
-  function selected_node(nodes: Array<Node>, mouse: Vec2d): number {
-    for (const [i, node] of nodes.entries()) {
+  function new_node_id(): number {
+    node_count++;
+    return node_count;
+  }
+
+  function new_edge_id(): number {
+    edge_count++;
+    return edge_count;
+  }
+
+  // Return the id of the node the mouse is in, otherwise return -1
+  function selected_node(nodes: Map<number, Node>, mouse: Vec2d): number {
+    for (const [id, node] of nodes.entries()) {
       if (in_circle(node.pos, node_radius, mouse)) {
-        return i;
+        return id;
       }
     }
     return -1;
   }
 
-  // Return the index of the edge the mouse is in the label in, otherwise return -1
-  function selected_edge(edges: Array<Edge>, mouse: Vec2d): number {
+  // Return the id of the edge the mouse is in the label in, otherwise return -1
+  function selected_edge(edges: Map<number, Edge>, mouse: Vec2d): number {
     for (const [i, edge] of edges.entries()) {
       const edge_box = edge_label_bounding_box(context, edge);
       if (in_rect(edge_box.top_left, edge_box.width, edge_box.height, mouse)) {
@@ -74,18 +96,27 @@
 
     //Draw edges
     for (const [i, edge] of edges.entries()) {
-      draw_edge(context, edge, node_radius, i === edit_edge_index);
+      draw_edge(
+        context,
+        edge,
+        node_radius,
+        i === edit_edge_index,
+        i === last_clicked_edge,
+      );
     }
 
     //Draw nodes
-    for (const [i, node] of nodes.entries()) {
+    for (const [id, node] of nodes.entries()) {
       draw_node(
         context,
         node,
         node_radius,
-        i === edit_node_index,
-        i === last_clicked_node,
+        id === edit_node_index,
+        id === last_clicked_node,
       );
+    }
+    if (start_state >= 0 && nodes.has(start_state)) {
+      draw_start_arrow(context, nodes.get(start_state)!, node_radius);
     }
   }
 
@@ -113,12 +144,12 @@
     if (node_moving) {
       const dx = mouse.x - last_x;
       const dy = mouse.y - last_y;
-      nodes[moving_node_index].pos.x += dx;
-      nodes[moving_node_index].pos.y += dy;
+      nodes.get(moving_node_index)!.pos.x += dx;
+      nodes.get(moving_node_index)!.pos.y += dy;
     }
     if (edge_moving) {
       const dy = mouse.y - last_y;
-      edges[moving_edge_index].h += dy;
+      edges.get(moving_edge_index)!.h += dy;
     }
 
     if (mouse_down) {
@@ -143,22 +174,25 @@
     if (selected_edge_index >= 0) {
       edge_moving = true;
       moving_edge_index = selected_edge_index;
+      last_mouse.x = mouse.x;
+      last_mouse.y = mouse.y;
     }
 
-    handle_mouse_move(event);
+    //handle_mouse_move(event);
     if (double_click()) {
       if (selected_node_index >= 0) {
         // Edit node label
         edit_node_index = selected_node_index;
         edit_edge_index = -1;
       } else if (selected_edge_index >= 0) {
+        // Edit edge label
         edit_edge_index = selected_edge_index;
         edit_node_index = -1;
       } else {
         // Create a new node
-        nodes.push(new_node({ x: mouse.x, y: mouse.y }));
-        nodes[nodes.length - 1].label = `q${num_nodes}`
-        num_nodes += 1;
+        const id = new_node_id();
+        nodes.set(id, new_node(id, { x: mouse.x, y: mouse.y }));
+        nodes.get(id)!.label = `q${id}`;
         edit_node_index = -1;
         last_clicked_node = -1;
         edit_edge_index = -1;
@@ -167,6 +201,7 @@
       // Unselect nodes and edges
       edit_node_index = -1;
       edit_edge_index = -1;
+      last_clicked_edge = -1;
     }
     last_mouse_down = performance.now();
     redraw();
@@ -175,15 +210,19 @@
   function handle_mouse_up(event: any) {
     handle_mouse_move(event);
     const i = selected_node(nodes, mouse);
+    const j = selected_edge(edges, mouse);
     if (i >= 0 && !mouse_moved()) {
       if (last_clicked_node === -1) {
         last_clicked_node = i;
       } else {
-        edges.push(new_edge(nodes[last_clicked_node], nodes[i]));
+        edges.set(new_edge_id(), new_edge(nodes.get(last_clicked_node)!, nodes.get(i)!));
         last_clicked_node = -1;
       }
+    } else if (j >= 0 && !mouse_moved()) {
+      last_clicked_edge = j;
     } else {
       last_clicked_node = -1;
+      last_clicked_edge = -1;
     }
     mouse_down = false;
     node_moving = false;
@@ -192,12 +231,29 @@
   }
 
   function handle_key_down(event: any) {
-    key_down = event.key;
+    const key_down = event.key;
+    if (last_clicked_node >= 0 && edit_node_index < 0) {
+      if (key_down === "Backspace") {
+        remove_node(nodes, edges, last_clicked_node);
+        redraw();
+      } else if (key_down === "s") {
+        start_state = last_clicked_node;
+        redraw();
+      } else if (key_down === "Enter") {
+        nodes.get(last_clicked_node)!.is_accept =
+          !nodes.get(last_clicked_node)!.is_accept;
+        redraw();
+      }
+    }
+    if (last_clicked_edge >= 0 && key_down === "Backspace" && edit_edge_index < 0) {
+      remove_edge(edges, last_clicked_edge);
+      redraw();
+    }
     let obj: Node | Edge | undefined;
     if (edit_edge_index >= 0) {
-      obj = edges[edit_edge_index];
+      obj = edges.get(edit_edge_index)!;
     } else if (edit_node_index >= 0) {
-      obj = nodes[edit_node_index];
+      obj = nodes.get(edit_node_index)!;
     } else {
       return;
     }
