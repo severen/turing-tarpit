@@ -38,7 +38,8 @@ class Parser {
   /** The current character position of this parser within the input string. */
   #position = 0;
 
-  readonly #reIdent = /^\p{ID_Start}\p{ID_Continue}*'?/u;
+  // TODO: Disallow λ in identifiers.
+  readonly #reIdent = /^\p{ID_Start}\p{ID_Continue}*'*/u;
   readonly #reWhitespace = /^\p{Pattern_White_Space}+/u;
 
   /**
@@ -66,14 +67,19 @@ class Parser {
 
   /** Parse the term nonterminal. */
   #term(): Term {
-    return this.#peek() === "\\" ? this.#abs() : this.#app();
+    const token = this.#peek();
+    return token === "\\" || token === "λ" ? this.#abs() : this.#app();
   }
 
   /** Parse the abstraction nonterminal. */
   #abs(): Abs {
     const isIdentPrefix = (char: string): boolean => this.#reIdent.test(char);
 
-    this.#consume("\\");
+    if (this.#peek() === "\\") {
+      this.#consume("\\");
+    } else {
+      this.#consume("λ");
+    }
     const head = [];
     while (isIdentPrefix(this.#peek())) {
       head.push(this.#ident());
