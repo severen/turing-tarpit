@@ -235,6 +235,8 @@
     if (last_clicked_node >= 0 && edit_node_index < 0) {
       if (key_down === "Backspace") {
         remove_node(nodes, edges, last_clicked_node);
+        console.log("Deleting Node " + last_clicked_node);
+        last_clicked_node = -1;
         redraw();
       } else if (key_down === "s") {
         start_state = last_clicked_node;
