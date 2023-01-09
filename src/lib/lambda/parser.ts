@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import { assert } from "$lib/assert";
+import { assert } from "$lib/util";
 import { mkAbs, mkApp, mkVar, type Abs, type Term, type Var } from "$lib/lambda/syntax";
 
 // In EBNF notation, we implement the following grammar for λ-terms:
