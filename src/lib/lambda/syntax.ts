@@ -69,3 +69,45 @@ export function freeVars(t: Term): Set<Name> {
       return new Set([...freeVars(t.left), ...freeVars(t.right)]);
   }
 }
+
+/**
+ * Convert a term to its _pretty_ string representation.
+ *
+ * Each term is formatted in such a way that:
+ * 1. Consecutive single variable abstractions are combined into one multivariate
+ *    abstraction.
+ * 2. As many superfluous brackets as possible are removed.
+ *
+ * @param t The term to convert to a string.
+ */
+export function prettyPrint(t: Term): Name {
+  switch (t.kind) {
+    case TermKind.Var:
+      return t.name.toString();
+    case TermKind.Abs: {
+      let f = t;
+      let xs = [f.head];
+      while (f.body.kind === TermKind.Abs) {
+        f = f.body;
+        xs = [...xs, f.head];
+      }
+      return `λ${xs.join(" ")} -> ${prettyPrint(f.body)}`;
+    }
+    case TermKind.App: {
+      const left = prettyPrint(t.left);
+      const right = prettyPrint(t.right);
+      if (
+        t.left.kind === TermKind.Abs &&
+        (t.right.kind === TermKind.Abs || t.right.kind === TermKind.App)
+      ) {
+        return `(${left}) (${right})`;
+      } else if (t.left.kind === TermKind.Abs) {
+        return `(${left}) ${right}`;
+      } else if (t.right.kind === TermKind.App) {
+        return `${left} (${right})`;
+      }
+
+      return `${left} ${right}`;
+    }
+  }
+}
