@@ -4,22 +4,25 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+/** A name in a λ-term. */
+export type Name = string;
+
 /** A λ-term. */
-export type Term<T = string> = Var<T> | Abs<T> | App<T>;
+export type Term = Var | Abs | App;
 
 /** A variable term. */
-export type Var<T = string> = { readonly kind: TermKind.Var; readonly name: T };
+export type Var = { readonly kind: TermKind.Var; readonly name: Name };
 /** An abstraction term. */
-export type Abs<T = string> = {
+export type Abs = {
   readonly kind: TermKind.Abs;
-  readonly head: T;
-  readonly body: Term<T>;
+  readonly head: Name;
+  readonly body: Term;
 };
 /** An application term. */
-export type App<T = string> = {
+export type App = {
   readonly kind: TermKind.App;
   readonly left: Term;
-  readonly right: Term<T>;
+  readonly right: Term;
 };
 
 /** The kind of a Term. */
@@ -33,13 +36,13 @@ export enum TermKind {
  * Construct a new variable term.
  * @param name The name of this variable.
  */
-export const mkVar = (name: string): Var => ({ kind: TermKind.Var, name });
+export const mkVar = (name: Name): Var => ({ kind: TermKind.Var, name });
 /**
  * Construct a new abstraction term.
  * @param head The bound variable.
  * @param body The body term.
  */
-export const mkAbs = (head: string, body: Term): Abs => ({
+export const mkAbs = (head: Name, body: Term): Abs => ({
   kind: TermKind.Abs,
   head,
   body,
