@@ -4,33 +4,33 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, test } from "vitest";
 
 import { freeVars, mkAbs, mkApp, mkVar } from "$lib/lambda/syntax";
 
-describe("function freeVars", () => {
-  it("works for a single variable", async () => {
+describe("function freeVars(t: Term): Set<Name>", async () => {
+  test("freeVars(x) = {x}", async () => {
     const t = mkVar("x");
     expect(freeVars(t)).toEqual(new Set(["x"]));
   });
 
-  it("works for an abstraction", async () => {
+  test("freeVars(λf -> f) = ∅", async () => {
+    const t = mkAbs("f", mkVar("f"));
+    expect(freeVars(t)).toEqual(new Set());
+  });
+
+  test("freeVars(λf -> x) = {x}", async () => {
     const t = mkAbs("f", mkVar("x"));
     expect(freeVars(t)).toEqual(new Set(["x"]));
   });
 
-  it("works for an application", async () => {
+  test("freeVars(f x) = {f, x}", async () => {
     const t = mkApp(mkVar("f"), mkVar("x"));
     expect(freeVars(t)).toEqual(new Set(["f", "x"]));
   });
 
-  it("ignores bound variables", async () => {
-    const t = mkAbs("x", mkVar("x"));
-    expect(freeVars(t)).toEqual(new Set([]));
-  });
-
-  it("does not duplicate variables", async () => {
-    const t = mkApp(mkVar("x"), mkVar("x"));
+  test("freeVars((λx -> x) x) = {x}", async () => {
+    const t = mkApp(mkAbs("x", mkVar("x")), mkVar("x"));
     expect(freeVars(t)).toEqual(new Set(["x"]));
   });
 });
