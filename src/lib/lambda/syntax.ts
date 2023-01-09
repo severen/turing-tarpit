@@ -58,43 +58,14 @@ export const mkApp = (left: Term, right: Term): App => ({
   right,
 });
 
-/**
- * Apply a function to each term encountered while traversing a syntax tree of
- * terms.
- * @param f The function to apply to each term in the syntax tree.
- * @param root The root term of the syntax tree.
- */
-export function apply(f: (t: Term) => void, root: Term): void {
-  const todo = [root];
-  while (todo.length > 0) {
-    // By the loop condition above, t will never be undefined/null.
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const t = todo.pop()!;
-    f(t);
-
-    if (t.kind === TermKind.App) {
-      todo.push(t.right);
-      todo.push(t.left);
-    } else if (t.kind === TermKind.Abs) {
-      todo.push(t.body);
-    }
-  }
-}
-
 /** Get the free variables contained in a term. */
-export function freeVars(t: Term): string[] {
-  const boundVars: Set<string> = new Set();
-  const freeVars: Set<string> = new Set();
-  apply((t) => {
-    if (t.kind === TermKind.Abs) {
-      boundVars.add(t.head);
-    } else if (t.kind === TermKind.Var) {
-      const variable = t.name;
-      if (!boundVars.has(variable)) {
-        freeVars.add(variable);
-      }
-    }
-  }, t);
-
-  return Array.from(freeVars);
+export function freeVars(t: Term): Set<Name> {
+  switch (t.kind) {
+    case TermKind.Var:
+      return new Set([t.name]);
+    case TermKind.Abs:
+      return new Set([...freeVars(t.body)].filter((x) => x !== t.head));
+    case TermKind.App:
+      return new Set([...freeVars(t.left), ...freeVars(t.right)]);
+  }
 }
