@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import { isEqual } from "lodash-es";
-
 import {
   freeVars,
   mkAbs,
@@ -23,15 +21,15 @@ import {
  * @returns The reduction steps taken to evaluate `t`.
  */
 export function evaluate(t: Term): Term[] {
-  const steps = [t, reduce(t)];
+  const steps = [t, reduce(t)[0]];
   for (let i = 1; ; ++i) {
-    const s = reduce(steps[i]);
+    const [s, wasContracted] = reduce(steps[i]);
 
     // If reduction gives the same term twice, then there are no more β-redexes and we
     // can stop evaluating. Also note the use of isEqual from lodash over ===, which we
     // use for _structural_ equality instead of _referential_ equality. One would expect
     // JavaScript to have such a function built in, but unfortunately it still sucks.
-    if (!isEqual(s, steps[i])) {
+    if (wasContracted) {
       steps.push(s);
     } else {
       return steps;
@@ -44,35 +42,33 @@ export function evaluate(t: Term): Term[] {
 /**
  * Perform one step of normal order β-reduction within a term, if possible.
  * @param t The term in which to perform β-reduction.
+ * @returns A list R in which R[0] is the resultant term and R[1] indicates whether a
+ * contraction has occured.
  */
-export function reduce(t: Term): Term {
+export function reduce(t: Term): [Term, boolean] {
   // So that we can enforce leftmost-to-rightmost evaluation of redexes, we keep track
-  // of whether a contraction has ocurred with the use of this inner function.
-  const go = (t: Term): [Term, boolean] => {
-    switch (t.kind) {
-      case TermKind.Var:
-        return [t, false];
-      case TermKind.Abs: {
-        const [body, wasContracted] = go(t.body);
-        return [mkAbs(t.head, body), wasContracted];
-      }
-      case TermKind.App: {
-        if (t.left.kind === TermKind.Abs) {
-          return [subst(t.left.head, t.right, t.left.body), true];
-        }
-
-        // If the left-hand term of the application has not been contracted, then we
-        // try to reduce the right-hand term instead.
-        const [left, wasLeftContracted] = go(t.left);
-        const [right, wasRightContracted] = wasLeftContracted
-          ? [t.right, false]
-          : go(t.right);
-        return [mkApp(left, right), wasLeftContracted || wasRightContracted];
-      }
+  // of whether a contraction has ocurred with the use of the second parameter.
+  switch (t.kind) {
+    case TermKind.Var:
+      return [t, false];
+    case TermKind.Abs: {
+      const [body, wasContracted] = reduce(t.body);
+      return [mkAbs(t.head, body), wasContracted];
     }
-  };
+    case TermKind.App: {
+      if (t.left.kind === TermKind.Abs) {
+        return [subst(t.left.head, t.right, t.left.body), true];
+      }
 
-  return go(t)[0];
+      // If the left-hand term of the application has not been contracted, then we
+      // try to reduce the right-hand term instead.
+      const [left, wasLeftContracted] = reduce(t.left);
+      const [right, wasRightContracted] = wasLeftContracted
+        ? [t.right, false]
+        : reduce(t.right);
+      return [mkApp(left, right), wasLeftContracted || wasRightContracted];
+    }
+  }
 }
 
 /**
