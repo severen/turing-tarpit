@@ -4,22 +4,25 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+/** A name in a λ-term. */
+export type Name = string;
+
 /** A λ-term. */
-export type Term<T = string> = Var<T> | Abs<T> | App<T>;
+export type Term = Var | Abs | App;
 
 /** A variable term. */
-export type Var<T = string> = { readonly kind: TermKind.Var; readonly name: T };
+export type Var = { readonly kind: TermKind.Var; readonly name: Name };
 /** An abstraction term. */
-export type Abs<T = string> = {
+export type Abs = {
   readonly kind: TermKind.Abs;
-  readonly head: T;
-  readonly body: Term<T>;
+  readonly head: Name;
+  readonly body: Term;
 };
 /** An application term. */
-export type App<T = string> = {
+export type App = {
   readonly kind: TermKind.App;
   readonly left: Term;
-  readonly right: Term<T>;
+  readonly right: Term;
 };
 
 /** The kind of a Term. */
@@ -33,13 +36,13 @@ export enum TermKind {
  * Construct a new variable term.
  * @param name The name of this variable.
  */
-export const mkVar = (name: string): Var => ({ kind: TermKind.Var, name });
+export const mkVar = (name: Name): Var => ({ kind: TermKind.Var, name });
 /**
  * Construct a new abstraction term.
  * @param head The bound variable.
  * @param body The body term.
  */
-export const mkAbs = (head: string, body: Term): Abs => ({
+export const mkAbs = (head: Name, body: Term): Abs => ({
   kind: TermKind.Abs,
   head,
   body,
@@ -55,43 +58,56 @@ export const mkApp = (left: Term, right: Term): App => ({
   right,
 });
 
-/**
- * Apply a function to each term encountered while traversing a syntax tree of
- * terms.
- * @param f The function to apply to each term in the syntax tree.
- * @param root The root term of the syntax tree.
- */
-export function apply(f: (t: Term) => void, root: Term): void {
-  const todo = [root];
-  while (todo.length > 0) {
-    // By the loop condition above, t will never be undefined/null.
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const t = todo.pop()!;
-    f(t);
-
-    if (t.kind === TermKind.App) {
-      todo.push(t.right);
-      todo.push(t.left);
-    } else if (t.kind === TermKind.Abs) {
-      todo.push(t.body);
-    }
+/** Get the free variables contained in a term. */
+export function freeVars(t: Term): Set<Name> {
+  switch (t.kind) {
+    case TermKind.Var:
+      return new Set([t.name]);
+    case TermKind.Abs:
+      return new Set([...freeVars(t.body)].filter((x) => x !== t.head));
+    case TermKind.App:
+      return new Set([...freeVars(t.left), ...freeVars(t.right)]);
   }
 }
 
-/** Get the free variables contained in a term. */
-export function freeVars(t: Term): string[] {
-  const boundVars: Set<string> = new Set();
-  const freeVars: Set<string> = new Set();
-  apply((t) => {
-    if (t.kind === TermKind.Abs) {
-      boundVars.add(t.head);
-    } else if (t.kind === TermKind.Var) {
-      const variable = t.name;
-      if (!boundVars.has(variable)) {
-        freeVars.add(variable);
+/**
+ * Convert a term to its _pretty_ string representation.
+ *
+ * Each term is formatted in such a way that:
+ * 1. Consecutive single variable abstractions are combined into one multivariate
+ *    abstraction.
+ * 2. As many superfluous brackets as possible are removed.
+ *
+ * @param t The term to convert to a string.
+ */
+export function prettyPrint(t: Term): Name {
+  switch (t.kind) {
+    case TermKind.Var:
+      return t.name.toString();
+    case TermKind.Abs: {
+      let f = t;
+      let xs = [f.head];
+      while (f.body.kind === TermKind.Abs) {
+        f = f.body;
+        xs = [...xs, f.head];
       }
+      return `λ${xs.join(" ")} -> ${prettyPrint(f.body)}`;
     }
-  }, t);
+    case TermKind.App: {
+      const left = prettyPrint(t.left);
+      const right = prettyPrint(t.right);
+      if (
+        t.left.kind === TermKind.Abs &&
+        (t.right.kind === TermKind.Abs || t.right.kind === TermKind.App)
+      ) {
+        return `(${left}) (${right})`;
+      } else if (t.left.kind === TermKind.Abs) {
+        return `(${left}) ${right}`;
+      } else if (t.right.kind === TermKind.App) {
+        return `${left} (${right})`;
+      }
 
-  return Array.from(freeVars);
+      return `${left} ${right}`;
+    }
+  }
 }
