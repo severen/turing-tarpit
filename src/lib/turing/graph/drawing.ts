@@ -6,6 +6,8 @@
 
 import { getContext, onMount, onDestroy } from "svelte";
 import { writable, derived } from "svelte/store";
+
+
 import {
   minus,
   norm,
@@ -23,8 +25,19 @@ export const width = 732;
 export const height = 2 * 172;
 export const ARROW_SIZE = 10;
 export const TEXT_BOX_MARGIN = 5;
+export const NODE_RADIUS = 20;
+export const SELF_EDGE_RATIO = 0.75;
 export const context = writable();
 export const canvas = writable();
+
+function rotate(pivot: Vec2d, v: Vec2d, theta: number): Vec2d {
+  let temp = minus(v, pivot);
+  temp = {
+    x: temp.x * Math.cos(theta) - temp.y * Math.sin(theta),
+    y: temp.x * Math.sin(theta) + temp.y * Math.cos(theta)
+  };
+  return plus(temp, pivot);
+}
 
 function draw_curly_arrow(context: CanvasRenderingContext2D, tip: Vec2d, base: Vec2d) {
   context.lineWidth = 1.5;
@@ -46,15 +59,25 @@ function draw_curly_arrow(context: CanvasRenderingContext2D, tip: Vec2d, base: V
 
 export function edge_label_bounding_box(
   context: CanvasRenderingContext2D,
-  edge: Edge,
+  edge: Edge
 ): LabelBoundingBox {
+  let label: Vec2d;
   const label_dims = context.measureText(edge.label);
-  const p1 = edge.tail.pos;
-  const p2 = edge.head.pos;
-  const v = normed(minus(p2, p1));
-  const n = perp(v);
-  const mid = plus(p1, times(norm(minus(p2, p1)) / 2, v));
-  const label = plus(mid, times(edge.h, n));
+  if (edge.head.id !== edge.tail.id) {
+    const p1 = edge.tail.pos;
+    const p2 = edge.head.pos;
+    const v = normed(minus(p2, p1));
+    const n = perp(v);
+    const mid = plus(p1, times(norm(minus(p2, p1)) / 2, v));
+    label = plus(mid, times(edge.h, n));
+  } else {
+    const node_center = edge.tail.pos;
+    const c = {x: edge.tail.pos.x, y: edge.tail.pos.y - (0.9 + SELF_EDGE_RATIO)*NODE_RADIUS};
+    let t = minus(c, node_center);
+    t = {x: t.x*Math.cos(edge.h) - t.y*Math.sin(edge.h), y: t.x*Math.sin(edge.h) + t.y*Math.cos(edge.h)}
+    t = plus(t, node_center);
+    label = {x: t.x, y: t.y - NODE_RADIUS * SELF_EDGE_RATIO};
+  }
   return {
     top_left: {
       x: label.x - label_dims.width / 2 - TEXT_BOX_MARGIN,
@@ -65,48 +88,39 @@ export function edge_label_bounding_box(
   };
 }
 
-function draw_edge_label(
+export function draw_edge_label(
   context: CanvasRenderingContext2D,
   edge: Edge,
   editing: boolean,
   selected: boolean,
 ) {
-  const p1 = edge.tail.pos;
-  const p2 = edge.head.pos;
-  const v = normed(minus(p2, p1));
-
-  const n = perp(v);
-  const mid = plus(p1, times(norm(minus(p2, p1)) / 2, v));
-  const label = plus(mid, times(edge.h, n));
-
-  const TEXT_BOX_MARGIN = 5;
-  const label_dims = context.measureText(edge.label);
-  const width = label_dims.width;
-  const height = label_dims.actualBoundingBoxAscent;
+  const bounding_box = edge_label_bounding_box(context, edge);
+  const text_dims = context.measureText(edge.label);
+  const label = {x: bounding_box.top_left.x + TEXT_BOX_MARGIN, y: bounding_box.top_left.y + text_dims.actualBoundingBoxAscent + TEXT_BOX_MARGIN};
 
   if (editing) {
     context.setLineDash([5, 5]);
   }
   context.fillStyle = "#1F2937";
   context.fillRect(
-    label.x - width / 2 - TEXT_BOX_MARGIN,
-    label.y - height - 2 * TEXT_BOX_MARGIN,
-    width + 2 * TEXT_BOX_MARGIN,
-    height + 2 * TEXT_BOX_MARGIN,
+    bounding_box.top_left.x,
+    bounding_box.top_left.y,
+    bounding_box.width,
+    bounding_box.height,
   );
   if (selected && !editing) {
     context.strokeStyle = "#727272";
   }
   context.strokeRect(
-    label.x - width / 2 - TEXT_BOX_MARGIN,
-    label.y - height - 2 * TEXT_BOX_MARGIN,
-    width + 2 * TEXT_BOX_MARGIN,
-    height + 2 * TEXT_BOX_MARGIN,
+    bounding_box.top_left.x,
+    bounding_box.top_left.y,
+    bounding_box.width,
+    bounding_box.height,
   );
   context.setLineDash([]);
   context.fillStyle = "#FFFFFF";
   context.strokeStyle = "#FFFFFF";
-  context.fillText(edge.label, label.x - width / 2, label.y - TEXT_BOX_MARGIN);
+  context.fillText(edge.label, label.x, label.y);
 }
 
 function draw_straight_edge(
@@ -162,19 +176,36 @@ function draw_arced_edge(
   draw_curly_arrow(context, tip, base);
 }
 
+function draw_self_edge(context: CanvasRenderingContext2D, edge: Edge, node_radius: number) {
+  const node_center = edge.tail.pos;
+  const c = {x: edge.tail.pos.x, y: edge.tail.pos.y - (0.9 + SELF_EDGE_RATIO)*node_radius};
+  const t = rotate(node_center, c, edge.h);
+
+  let tip = {x: node_center.x, y: node_center.y - NODE_RADIUS};
+  let base = {x: node_center.x, y: node_center.y - NODE_RADIUS - Math.sqrt((3 * ARROW_SIZE ** 2) / 4)};
+  const theta = 0.41;
+  tip = rotate(node_center, tip, theta + edge.h);
+  base = rotate(node_center, base, 1.1 * theta + edge.h);
+
+
+  context.beginPath();
+  context.arc(t.x, t.y, node_radius * SELF_EDGE_RATIO, 0, 2*Math.PI);
+  context.stroke();
+  draw_curly_arrow(context, tip, base);
+}
+
 export function draw_edge(
   context: CanvasRenderingContext2D,
   edge: Edge,
   node_radius: number,
-  editing: boolean,
-  selected: boolean,
 ) {
-  if (edge.h === 0) {
+  if (edge.h === 0 && edge.tail.id !== edge.head.id) {
     draw_straight_edge(context, edge, node_radius);
+  } else if (edge.head.id === edge.tail.id) {
+    draw_self_edge(context, edge, node_radius);
   } else {
     draw_arced_edge(context, edge, node_radius);
   }
-  draw_edge_label(context, edge, editing, selected);
 }
 
 export function draw_node(

@@ -14,6 +14,7 @@
     edge_label_bounding_box,
     draw_node,
     draw_start_arrow,
+    draw_edge_label,
   } from "$lib/turing/graph/drawing";
   import {
     in_circle,
@@ -25,6 +26,7 @@
     new_edge,
     remove_node,
     remove_edge,
+    angle,
   } from "$lib/turing/graph/logic";
 
   let canvas: HTMLCanvasElement;
@@ -99,9 +101,7 @@
       draw_edge(
         context,
         edge,
-        node_radius,
-        i === edit_edge_index,
-        i === last_clicked_edge,
+        node_radius
       );
     }
 
@@ -115,6 +115,11 @@
         id === last_clicked_node,
       );
     }
+    //Draw edge labels
+    for (const [id, edge] of edges.entries()) {
+      draw_edge_label(context, edge, id === edit_edge_index, id === last_clicked_edge);
+    }
+
     if (start_state >= 0 && nodes.has(start_state)) {
       draw_start_arrow(context, nodes.get(start_state)!, node_radius);
     }
@@ -139,17 +144,25 @@
     const rect = canvas.getBoundingClientRect();
     const last_x = mouse.x;
     const last_y = mouse.y;
+    const last = {x: last_x, y: last_y};
     mouse.x = clientX - rect.left;
     mouse.y = clientY - rect.top;
+    const dx = mouse.x - last_x;
+    const dy = mouse.y - last_y;
     if (node_moving) {
-      const dx = mouse.x - last_x;
-      const dy = mouse.y - last_y;
       nodes.get(moving_node_index)!.pos.x += dx;
       nodes.get(moving_node_index)!.pos.y += dy;
     }
     if (edge_moving) {
-      const dy = mouse.y - last_y;
-      edges.get(moving_edge_index)!.h += dy;
+      if (edges.get(moving_edge_index)!.head.id !== edges.get(moving_edge_index)!.tail.id) {
+        edges.get(moving_edge_index)!.h += dy;
+      } else {
+        if (Math.abs(dx) >= Math.abs(dy)) {
+          edges.get(moving_edge_index)!.h += dx/25;
+        } else {
+          edges.get(moving_edge_index)!.h += dy/25;
+        }
+      }
     }
 
     if (mouse_down) {
