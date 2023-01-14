@@ -4,7 +4,7 @@
   SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 <script lang="ts">
-  import "../main.css";
+  import "../main.pcss";
 
   import Theme from "$lib/components/Theme.svelte";
   import Navbar from "$lib/components/Navbar.svelte";
