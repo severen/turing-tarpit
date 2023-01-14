@@ -4,18 +4,16 @@
  * SPDX-License-Identifier: CC0-1.0
  */
 
-import adapter from "@sveltejs/adapter-netlify";
-import preprocess from "svelte-preprocess";
+import netlifyAdapter from "@sveltejs/adapter-netlify";
+import { vitePreprocess } from "@sveltejs/kit/vite";
 
 /** @type {import('@sveltejs/kit').Config} */
-const config = {
+export default {
   // Consult https://github.com/sveltejs/svelte-preprocess
   // for more information about preprocessors
-  preprocess: preprocess({ postcss: true }),
+  preprocess: vitePreprocess(),
 
   kit: {
-    adapter: adapter(),
+    adapter: netlifyAdapter(),
   },
 };
-
-export default config;
