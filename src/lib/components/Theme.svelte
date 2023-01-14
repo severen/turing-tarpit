@@ -39,6 +39,6 @@
   </script>
 </svelte:head>
 
-<div class="latte bg-base text-text antialiased dark:macchiato">
+<div class="latte bg-base text-text antialiased transition dark:macchiato">
   <slot />
 </div>
