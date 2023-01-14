@@ -7,7 +7,6 @@
 module.exports = {
   content: ["./src/**/*.{html,svelte,js,ts}"],
   darkMode: "class",
-  theme: {
-    extend: {},
-  },
+  theme: { extend: {} },
+  plugins: [require("@catppuccin/tailwindcss")],
 };

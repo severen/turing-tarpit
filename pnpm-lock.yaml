@@ -1,6 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
+  '@catppuccin/tailwindcss': ^0.1.1
   '@codemirror/commands': ^6.2.0
   '@codemirror/state': ^6.2.0
   '@codemirror/view': ^6.7.3
@@ -33,6 +34,7 @@ specifiers:
   vitest: ^0.28.1
 
 devDependencies:
+  '@catppuccin/tailwindcss': 0.1.1_postcss@8.4.21
   '@codemirror/commands': 6.2.0
   '@codemirror/state': 6.2.0
   '@codemirror/view': 6.7.3
@@ -68,6 +70,20 @@ packages:
 
   /@bcoe/v8-coverage/0.2.3:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
+    dev: true
+
+  /@catppuccin/palette/0.1.5:
+    resolution: {integrity: sha512-IQLsZwXDMpLc5CFGjIMa/gFnnFL/QLB280F11B51JweZHerZ/FgPXdIR4eQqn1CgrqI3wGfgnj1LVPx12DV/Uw==}
+    dev: true
+
+  /@catppuccin/tailwindcss/0.1.1_postcss@8.4.21:
+    resolution: {integrity: sha512-WWOzx8uOf3QPZ1HdVSkpgaqzMzrfYpOgAketQAQ7493eFhlYC4bJ1ViT5ukhwfhzuu3xnmke+Op2qjhHnyjt8g==}
+    dependencies:
+      '@catppuccin/palette': 0.1.5
+      tailwindcss: 3.2.4_postcss@8.4.21
+    transitivePeerDependencies:
+      - postcss
+      - ts-node
     dev: true
 
   /@codemirror/autocomplete/6.4.0_a4vbhepr4qhxm5cldqd4jpyase:

@@ -20,15 +20,13 @@
 </svelte:head>
 
 <Theme>
-  <div class="min-h-screen">
-    <div class="mx-auto max-w-screen-md p-4">
-      <header class="mb-4">
-        <Navbar />
-      </header>
+  <div class="mx-auto min-h-screen max-w-screen-md p-4">
+    <header class="mb-4">
+      <Navbar />
+    </header>
 
-      <main>
-        <slot />
-      </main>
-    </div>
+    <main>
+      <slot />
+    </main>
   </div>
 </Theme>

@@ -7,12 +7,13 @@
   import { page } from "$app/stores";
 
   import { applications } from "$lib/applications";
+  import Link from "$lib/components/Link.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
   import logo from "$lib/assets/logo.svg";
 </script>
 
-<div class="flex items-center justify-between dark:text-slate-200">
+<div class="flex items-center justify-between">
   <h1 class="font-semibold">
     <a href="/"><img src={logo} alt="The Turing Tarpit" class="h-10 md:h-20" /></a>
   </h1>
@@ -21,9 +22,9 @@
     <ul class="flex space-x-3">
       {#each applications as { name, url }}
         {#if $page.url.pathname !== url}
-          <li><a href={url}>{name}</a></li>
+          <li><Link href={url}>{name}</Link></li>
         {:else}
-          <li><a href={url} class="text-red-600 dark:text-red-300">{name}</a></li>
+          <li><Link active href={url}>{name}</Link></li>
         {/if}
       {/each}
     </ul>
