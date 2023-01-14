@@ -26,7 +26,13 @@
     new_edge,
     remove_node,
     remove_edge,
-    angle,
+    bearing_from_node,
+    perp,
+    minus,
+    normed,
+    norm,
+    proj,
+    on_left,
   } from "$lib/turing/graph/logic";
 
   let canvas: HTMLCanvasElement;
@@ -98,11 +104,7 @@
 
     //Draw edges
     for (const [i, edge] of edges.entries()) {
-      draw_edge(
-        context,
-        edge,
-        node_radius
-      );
+      draw_edge(context, edge, node_radius);
     }
 
     //Draw nodes
@@ -144,24 +146,27 @@
     const rect = canvas.getBoundingClientRect();
     const last_x = mouse.x;
     const last_y = mouse.y;
-    const last = {x: last_x, y: last_y};
+    const last = { x: last_x, y: last_y };
     mouse.x = clientX - rect.left;
     mouse.y = clientY - rect.top;
-    const dx = mouse.x - last_x;
-    const dy = mouse.y - last_y;
+    let dx = mouse.x - last_x;
+    let dy = mouse.y - last_y;
     if (node_moving) {
       nodes.get(moving_node_index)!.pos.x += dx;
       nodes.get(moving_node_index)!.pos.y += dy;
     }
     if (edge_moving) {
-      if (edges.get(moving_edge_index)!.head.id !== edges.get(moving_edge_index)!.tail.id) {
-        edges.get(moving_edge_index)!.h += dy;
-      } else {
-        if (Math.abs(dx) >= Math.abs(dy)) {
-          edges.get(moving_edge_index)!.h += dx/25;
-        } else {
-          edges.get(moving_edge_index)!.h += dy/25;
+      const head = edges.get(moving_edge_index)!.head;
+      const tail = edges.get(moving_edge_index)!.tail;
+      if (head.id !== tail.id) {
+        if (!on_left(head.pos, tail.pos)) {
+          dx = -dx;
+          dy = -dy;
         }
+        edges.get(moving_edge_index)!.h += Math.abs(dx) >= Math.abs(dy) ? dx : dy;
+      } else {
+        const node = edges.get(moving_edge_index)!.head;
+        edges.get(moving_edge_index)!.h = bearing_from_node(node, mouse);
       }
     }
 

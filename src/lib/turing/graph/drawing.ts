@@ -7,7 +7,6 @@
 import { getContext, onMount, onDestroy } from "svelte";
 import { writable, derived } from "svelte/store";
 
-
 import {
   minus,
   norm,
@@ -34,7 +33,7 @@ function rotate(pivot: Vec2d, v: Vec2d, theta: number): Vec2d {
   let temp = minus(v, pivot);
   temp = {
     x: temp.x * Math.cos(theta) - temp.y * Math.sin(theta),
-    y: temp.x * Math.sin(theta) + temp.y * Math.cos(theta)
+    y: temp.x * Math.sin(theta) + temp.y * Math.cos(theta),
   };
   return plus(temp, pivot);
 }
@@ -45,7 +44,6 @@ function draw_curly_arrow(context: CanvasRenderingContext2D, tip: Vec2d, base: V
   const base_to_tip = times(1 / norm(minus(base, tip)), minus(base, tip));
   const b = plus(base, times((2 * s) / 3, perp(base_to_tip)));
   const c = plus(base, times((-2 * s) / 3, perp(base_to_tip)));
-
   context.beginPath();
   context.moveTo(tip.x, tip.y);
   context.quadraticCurveTo(base.x, base.y, b.x, b.y);
@@ -59,7 +57,7 @@ function draw_curly_arrow(context: CanvasRenderingContext2D, tip: Vec2d, base: V
 
 export function edge_label_bounding_box(
   context: CanvasRenderingContext2D,
-  edge: Edge
+  edge: Edge,
 ): LabelBoundingBox {
   let label: Vec2d;
   const label_dims = context.measureText(edge.label);
@@ -72,11 +70,12 @@ export function edge_label_bounding_box(
     label = plus(mid, times(edge.h, n));
   } else {
     const node_center = edge.tail.pos;
-    const c = {x: edge.tail.pos.x, y: edge.tail.pos.y - (0.9 + SELF_EDGE_RATIO)*NODE_RADIUS};
-    let t = minus(c, node_center);
-    t = {x: t.x*Math.cos(edge.h) - t.y*Math.sin(edge.h), y: t.x*Math.sin(edge.h) + t.y*Math.cos(edge.h)}
-    t = plus(t, node_center);
-    label = {x: t.x, y: t.y - NODE_RADIUS * SELF_EDGE_RATIO};
+    const c = {
+      x: edge.tail.pos.x,
+      y: edge.tail.pos.y - (0.9 + SELF_EDGE_RATIO) * NODE_RADIUS,
+    };
+    const t = rotate(node_center, c, edge.h);
+    label = { x: t.x, y: t.y - NODE_RADIUS * SELF_EDGE_RATIO };
   }
   return {
     top_left: {
@@ -96,7 +95,10 @@ export function draw_edge_label(
 ) {
   const bounding_box = edge_label_bounding_box(context, edge);
   const text_dims = context.measureText(edge.label);
-  const label = {x: bounding_box.top_left.x + TEXT_BOX_MARGIN, y: bounding_box.top_left.y + text_dims.actualBoundingBoxAscent + TEXT_BOX_MARGIN};
+  const label = {
+    x: bounding_box.top_left.x + TEXT_BOX_MARGIN,
+    y: bounding_box.top_left.y + text_dims.actualBoundingBoxAscent + TEXT_BOX_MARGIN,
+  };
 
   if (editing) {
     context.setLineDash([5, 5]);
@@ -176,20 +178,29 @@ function draw_arced_edge(
   draw_curly_arrow(context, tip, base);
 }
 
-function draw_self_edge(context: CanvasRenderingContext2D, edge: Edge, node_radius: number) {
+function draw_self_edge(
+  context: CanvasRenderingContext2D,
+  edge: Edge,
+  node_radius: number,
+) {
   const node_center = edge.tail.pos;
-  const c = {x: edge.tail.pos.x, y: edge.tail.pos.y - (0.9 + SELF_EDGE_RATIO)*node_radius};
+  const c = {
+    x: edge.tail.pos.x,
+    y: edge.tail.pos.y - (0.9 + SELF_EDGE_RATIO) * node_radius,
+  };
   const t = rotate(node_center, c, edge.h);
 
-  let tip = {x: node_center.x, y: node_center.y - NODE_RADIUS};
-  let base = {x: node_center.x, y: node_center.y - NODE_RADIUS - Math.sqrt((3 * ARROW_SIZE ** 2) / 4)};
+  let tip = { x: node_center.x, y: node_center.y - NODE_RADIUS };
+  let base = {
+    x: node_center.x,
+    y: node_center.y - NODE_RADIUS - Math.sqrt((3 * ARROW_SIZE ** 2) / 4),
+  };
   const theta = 0.41;
   tip = rotate(node_center, tip, theta + edge.h);
   base = rotate(node_center, base, 1.1 * theta + edge.h);
 
-
   context.beginPath();
-  context.arc(t.x, t.y, node_radius * SELF_EDGE_RATIO, 0, 2*Math.PI);
+  context.arc(t.x, t.y, node_radius * SELF_EDGE_RATIO, 0, 2 * Math.PI);
   context.stroke();
   draw_curly_arrow(context, tip, base);
 }
@@ -258,13 +269,26 @@ export function draw_start_arrow(
   node_radius: number,
 ) {
   context.beginPath();
-  context.moveTo(start_node.pos.x - node_radius, start_node.pos.y);
-  context.lineTo(start_node.pos.x - 3 * node_radius, start_node.pos.y);
-  context.stroke();
-  const tip = { x: start_node.pos.x - node_radius, y: start_node.pos.y };
-  const base = {
-    x: start_node.pos.x - node_radius - Math.sqrt((3 * ARROW_SIZE ** 2) / 4),
-    y: start_node.pos.y,
-  };
-  draw_curly_arrow(context, tip, base);
+
+  if (start_node.pos.x <= width / 2) {
+    context.moveTo(start_node.pos.x - node_radius, start_node.pos.y);
+    context.lineTo(start_node.pos.x - 3 * node_radius, start_node.pos.y);
+    context.stroke();
+    const tip = { x: start_node.pos.x - node_radius, y: start_node.pos.y };
+    const base = {
+      x: start_node.pos.x - node_radius - Math.sqrt((3 * ARROW_SIZE ** 2) / 4),
+      y: start_node.pos.y,
+    };
+    draw_curly_arrow(context, tip, base);
+  } else {
+    context.moveTo(start_node.pos.x + node_radius, start_node.pos.y);
+    context.lineTo(start_node.pos.x + 3 * node_radius, start_node.pos.y);
+    context.stroke();
+    const tip = { x: start_node.pos.x + node_radius, y: start_node.pos.y };
+    const base = {
+      x: start_node.pos.x + node_radius + Math.sqrt((3 * ARROW_SIZE ** 2) / 4),
+      y: start_node.pos.y,
+    };
+    draw_curly_arrow(context, tip, base);
+  }
 }

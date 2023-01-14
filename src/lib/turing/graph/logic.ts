@@ -11,8 +11,8 @@ export const norm = (u: Vec2d): number => Math.sqrt(u.x ** 2 + u.y ** 2);
 export const times = (a: number, u: Vec2d) => ({ x: a * u.x, y: a * u.y });
 export const perp = (u: Vec2d) => ({ x: -u.y, y: u.x });
 export const normed = (u: Vec2d): Vec2d => times(1 / norm(u), u);
-export const dot = (u: Vec2d, v: Vec2d): number => (u.x * v.x + u.y * u.y);
-export const angle = (u: Vec2d, v: Vec2d): number => (Math.acos(dot(u, v) / (norm(u) * norm(v))));
+export const dot = (u: Vec2d, v: Vec2d): number => u.x * v.x + u.y * u.y;
+export const proj = (u: Vec2d, v: Vec2d): Vec2d => times(dot(u, v) / dot(v, v), v);
 
 export type LabelBoundingBox = { top_left: Vec2d; width: number; height: number };
 
@@ -32,6 +32,19 @@ export const new_edge = (tail: Node, head: Node): Edge => ({
   h: 0,
 });
 
+// Return true if p2 is on the left of p1
+export function on_left(p1: Vec2d, p2: Vec2d): boolean {
+  return p2.x <= p1.x;
+}
+
+export function bearing_from_node(node: Node, mouse: Vec2d): number {
+  const theta = Math.acos((node.pos.y - mouse.y) / norm(minus(mouse, node.pos)));
+  if (on_left(node.pos, mouse)) {
+    return -theta;
+  } else {
+    return -(2 * Math.PI - theta);
+  }
+}
 
 export function in_circle(center: Vec2d, radius: number, mouse: Vec2d): boolean {
   return (center.x - mouse.x) ** 2 + (center.y - mouse.y) ** 2 <= radius ** 2;
