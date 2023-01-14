@@ -10,7 +10,9 @@ export const minus = (u: Vec2d, v: Vec2d): Vec2d => ({ x: u.x - v.x, y: u.y - v.
 export const norm = (u: Vec2d): number => Math.sqrt(u.x ** 2 + u.y ** 2);
 export const times = (a: number, u: Vec2d) => ({ x: a * u.x, y: a * u.y });
 export const perp = (u: Vec2d) => ({ x: -u.y, y: u.x });
-export const normed = (u: Vec2d) => times(1 / norm(u), u);
+export const normed = (u: Vec2d): Vec2d => times(1 / norm(u), u);
+export const dot = (u: Vec2d, v: Vec2d): number => (u.x * v.x + u.y * u.y);
+export const angle = (u: Vec2d, v: Vec2d): number => (Math.acos(dot(u, v) / (norm(u) * norm(v))));
 
 export type LabelBoundingBox = { top_left: Vec2d; width: number; height: number };
 
@@ -29,6 +31,7 @@ export const new_edge = (tail: Node, head: Node): Edge => ({
   label: "",
   h: 0,
 });
+
 
 export function in_circle(center: Vec2d, radius: number, mouse: Vec2d): boolean {
   return (center.x - mouse.x) ** 2 + (center.y - mouse.y) ** 2 <= radius ** 2;
