@@ -8,8 +8,12 @@
   <head>
     <meta charset="UTF-8" />
 
-    <link rel="icon" href="%sveltekit.assets%/favicon.png" sizes="32x32" />
-    <link rel="icon" href="%sveltekit.assets%/favicon-large.png" sizes="192x192" />
+    <!--
+      NOTE: Increment the value of the v parameter after modifying the favicon to ensure
+            all users recieve the updated version.
+    -->
+    <link rel="icon" href="%sveltekit.assets%/favicon.png?v=1" sizes="32x32" />
+    <link rel="icon" href="%sveltekit.assets%/favicon-large.png?v=1" sizes="192x192" />
     <meta name="viewport" content="width=device-width" />
 
     %sveltekit.head%
