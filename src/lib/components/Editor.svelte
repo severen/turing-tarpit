@@ -33,6 +33,9 @@
     ".cm-gutters": {
       border: "none",
     },
+    ".cm-activeLine, .cm-activeLineGutter": {
+      backgroundColor: "inherit",
+    },
   });
 
   const lightTheme = EditorView.theme(
@@ -52,7 +55,7 @@
       },
       // NOTE: Some transparency (30%) is added to ensure highlights are not covered
       //       on the active line.
-      ".cm-activeLine, .cm-activeLineGutter": {
+      "&.cm-focused .cm-activeLine, &.cm-focused .cm-activeLineGutter": {
         backgroundColor: ctpLatte.surface2.hex + "4D",
       },
       "&.cm-focused .cm-selectionBackground, ::selection": {
@@ -87,7 +90,7 @@
         color: ctpMacchiato.text.rgb,
         backgroundColor: ctpMacchiato.surface1.rgb,
       },
-      ".cm-activeLine, .cm-activeLineGutter": {
+      "&.cm-focused .cm-activeLine, &.cm-focused .cm-activeLineGutter": {
         // NOTE: Some transparency (30%) is added to ensure highlights are not covered
         //       on the active line.
         backgroundColor: ctpMacchiato.surface2.hex + "4D",
