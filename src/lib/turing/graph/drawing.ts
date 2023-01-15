@@ -29,6 +29,10 @@ export const SELF_EDGE_RATIO = 0.75;
 export const context = writable();
 export const canvas = writable();
 
+export function in_bounds(pos: Vec2d): boolean {
+  return pos.x >= 0 && pos.x <= width && pos.y >= 0 && pos.y <= height;
+}
+
 function rotate(pivot: Vec2d, v: Vec2d, theta: number): Vec2d {
   let temp = minus(v, pivot);
   temp = {

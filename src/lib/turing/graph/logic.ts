@@ -32,6 +32,42 @@ export const new_edge = (tail: Node, head: Node): Edge => ({
   h: 0,
 });
 
+function parse_edge_label(label: string): string {
+  return label
+    .split(",")
+    .map((s: string) => s.trim())
+    .join(" ");
+}
+
+export function instructions_from_graph(
+  start_state_id: number,
+  nodes: Map<number, Node>,
+  edges: Map<number, Edge>,
+): string {
+  const start_state =
+    nodes.get(start_state_id) === undefined ? "" : nodes.get(start_state_id)?.label;
+  const accept_states = [...nodes.values()]
+    .filter((node: Node) => node.is_accept)
+    .sort((n1: Node, n2: Node) => n1.label.localeCompare(n2.label));
+  let instructs =
+    start_state +
+    " " +
+    [...accept_states.map((node: Node) => node.label)].join(" ") +
+    "\n";
+  for (const node of [...nodes.values()].sort((n1: Node, n2: Node) =>
+    n1.label.localeCompare(n2.label),
+  )) {
+    for (const edge of edges.values()) {
+      if (node.id === edge.tail.id) {
+        instructs = instructs.concat(
+          `${edge.tail.label} ${parse_edge_label(edge.label)} ${edge.head.label}\n`,
+        );
+      }
+    }
+  }
+  return instructs;
+}
+
 // Return true if p2 is on the left of p1
 export function on_left(p1: Vec2d, p2: Vec2d): boolean {
   return p2.x <= p1.x;
@@ -62,6 +98,7 @@ export function in_rect(top_left: Vec2d, w: number, h: number, mouse: Vec2d): bo
 export function remove_node(
   nodes: Map<number, Node>,
   edges: Map<number, Edge>,
+  used_node_ids: Set<number>,
   node_id: number,
 ) {
   //Remove edges that the node is the tail of
@@ -72,6 +109,7 @@ export function remove_node(
   }
   //Remove node from node set
   nodes.delete(node_id);
+  used_node_ids.delete(node_id);
 }
 
 export function remove_edge(edges: Map<number, Edge>, edge_id: number) {
