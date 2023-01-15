@@ -28,6 +28,8 @@
     },
     ".cm-scroller": {
       overflow: "auto",
+      // NOTE: This should be kept in sync with the monospace fonts listed in
+      //       tailwind.config.js.
       fontFamily: "'JetBrains Mono', 'Cascadia Code', Hack, Menlo, monospace",
     },
     ".cm-gutters": {
@@ -53,8 +55,8 @@
         color: ctpLatte.text.rgb,
         backgroundColor: ctpLatte.surface1.rgb,
       },
-      // NOTE: Some transparency (30%) is added to ensure highlights are not covered
-      //       on the active line.
+      // Some transparency (30%) is added to ensure highlights are not covered on the
+      // active line.
       "&.cm-focused .cm-activeLine, &.cm-focused .cm-activeLineGutter": {
         backgroundColor: ctpLatte.surface2.hex + "4D",
       },
@@ -94,8 +96,8 @@
         backgroundColor: ctpMacchiato.surface1.rgb,
       },
       "&.cm-focused .cm-activeLine, &.cm-focused .cm-activeLineGutter": {
-        // NOTE: Some transparency (30%) is added to ensure highlights are not covered
-        //       on the active line.
+        // Some transparency (30%) is added to ensure highlights are not covered on the
+        // active line.
         backgroundColor: ctpMacchiato.surface2.hex + "4D",
       },
       ".cm-selectionBackground": {
