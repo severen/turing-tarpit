@@ -58,6 +58,9 @@
       "&.cm-focused .cm-activeLine, &.cm-focused .cm-activeLineGutter": {
         backgroundColor: ctpLatte.surface2.hex + "4D",
       },
+      ".cm-selectionBackground": {
+        backgroundColor: ctpLatte.overlay1.rgb,
+      },
       "&.cm-focused .cm-selectionBackground, ::selection": {
         backgroundColor: ctpLatte.overlay0.rgb,
       },
@@ -94,6 +97,9 @@
         // NOTE: Some transparency (30%) is added to ensure highlights are not covered
         //       on the active line.
         backgroundColor: ctpMacchiato.surface2.hex + "4D",
+      },
+      ".cm-selectionBackground": {
+        backgroundColor: ctpMacchiato.overlay1.rgb,
       },
       "&.cm-focused .cm-selectionBackground, .cm-content ::selection": {
         backgroundColor: ctpMacchiato.overlay0.rgb,
