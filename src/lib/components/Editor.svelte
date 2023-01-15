@@ -155,4 +155,4 @@
   });
 </script>
 
-<div class="outline outline-1 outline-surface2" bind:this={editorContainer} />
+<div class="outline outline-1 outline-overlay2" bind:this={editorContainer} />

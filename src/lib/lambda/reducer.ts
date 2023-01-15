@@ -15,6 +15,25 @@ import {
   type Term,
 } from "$lib/lambda/syntax";
 
+// TODO: Implement the alternative strategies.
+/** An evaluation strategy. */
+export enum Strategy {
+  /** Normal order evaluation, i.e. always reduce the leftmost, outermost redex. */
+  NormalOrder,
+  /** Applicative order evaluation, i.e. always reduce the leftmost, innermost redex. */
+  ApplicativeOrder,
+  /**
+   * Call by value evaluation, i.e. always reduce the leftmost, outermost redex
+   * _iff_ its right-hand side has reduced to either a variable or abstraction.
+   */
+  CallByValue,
+  /**
+   * Call by name evaluation, i.e. as normal order, but with no reductions
+   * inside abstractions.
+   */
+  CallByName,
+}
+
 /**
  * Perform reduction on a term until no more reductions are possible.
  * @param t The term to evaluate.
