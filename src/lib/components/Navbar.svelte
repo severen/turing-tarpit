@@ -14,9 +14,9 @@
 </script>
 
 <div class="flex items-center justify-between">
-  <h1 class="font-semibold">
-    <a href="/"><img src={logo} alt="The Turing Tarpit" class="h-10 md:h-20" /></a>
-  </h1>
+  <a href="/">
+    <img src={logo} alt="The Turing Tarpit" class="h-10 md:h-20" />
+  </a>
 
   <nav>
     <ul class="flex space-x-3">

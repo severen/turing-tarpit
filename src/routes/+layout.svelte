@@ -21,7 +21,7 @@
 
 <Theme>
   <div class="mx-auto min-h-screen max-w-screen-md p-4">
-    <header class="mb-4">
+    <header class="mb-4 md:mb-6">
       <Navbar />
     </header>
 
