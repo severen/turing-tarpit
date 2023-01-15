@@ -15,6 +15,7 @@
     draw_node,
     draw_start_arrow,
     draw_edge_label,
+    in_bounds,
   } from "$lib/turing/graph/drawing";
   import {
     in_circle,
@@ -27,12 +28,8 @@
     remove_node,
     remove_edge,
     bearing_from_node,
-    perp,
-    minus,
-    normed,
-    norm,
-    proj,
     on_left,
+    instructions_from_graph,
   } from "$lib/turing/graph/logic";
 
   let canvas: HTMLCanvasElement;
@@ -59,6 +56,9 @@
   let start_state = -1;
   let nodes: Map<number, Node> = new Map();
   let edges: Map<number, Edge> = new Map();
+  let used_node_ids: Set<number> = new Set();
+
+  let instructions: string;
 
   onMount(() => {
     context = canvas.getContext("2d")!;
@@ -67,9 +67,14 @@
     context.font = "15px mono";
   });
 
+  // Return the smallest non negative integer that is not in used_node_ids
   function new_node_id(): number {
-    node_count++;
-    return node_count;
+    let i = 0;
+    while (used_node_ids.has(i)) {
+      i++;
+    }
+    used_node_ids.add(i);
+    return i;
   }
 
   function new_edge_id(): number {
@@ -146,16 +151,15 @@
     const rect = canvas.getBoundingClientRect();
     const last_x = mouse.x;
     const last_y = mouse.y;
-    const last = { x: last_x, y: last_y };
     mouse.x = clientX - rect.left;
     mouse.y = clientY - rect.top;
     let dx = mouse.x - last_x;
     let dy = mouse.y - last_y;
-    if (node_moving) {
+    if (node_moving && in_bounds(mouse)) {
       nodes.get(moving_node_index)!.pos.x += dx;
       nodes.get(moving_node_index)!.pos.y += dy;
     }
-    if (edge_moving) {
+    if (edge_moving && in_bounds(mouse)) {
       const head = edges.get(moving_edge_index)!.head;
       const tail = edges.get(moving_edge_index)!.tail;
       if (head.id !== tail.id) {
@@ -250,9 +254,12 @@
 
   function handle_key_down(event: any) {
     const key_down = event.key;
+    if (key_down === "d") {
+      instructions_from_graph(start_state, nodes, edges);
+    }
     if (last_clicked_node >= 0 && edit_node_index < 0) {
       if (key_down === "Backspace") {
-        remove_node(nodes, edges, last_clicked_node);
+        remove_node(nodes, edges, used_node_ids, last_clicked_node);
         console.log("Deleting Node " + last_clicked_node);
         last_clicked_node = -1;
         redraw();
