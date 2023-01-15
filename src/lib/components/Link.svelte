@@ -8,10 +8,6 @@
   export let active = false;
 </script>
 
-<a
-  class:text-peach={active}
-  class="transition hover:text-peach focus:ring-2 focus:ring-peach"
-  {href}
->
+<a class:text-peach={active} class="transition hover:text-peach" {href}>
   <slot />
 </a>
