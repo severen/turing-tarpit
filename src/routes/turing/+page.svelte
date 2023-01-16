@@ -21,6 +21,8 @@
   import GraphCanvas from "$lib/components/GraphCanvas.svelte";
 
   let document: string;
+  let instructions: string;
+
   let tape_input_string = "";
   let tm_display_string = "";
   let tape_display_string = "";
@@ -32,6 +34,11 @@
   const max_steps = 150;
 
   function read_document() {
+    if (!text_input) {
+      instructions = instructions;
+      document = instructions;
+      console.log(instructions);
+    }
     const result = read_transition_table(document);
     tm_display_string = tm_read_result_display(document, result);
     if (result.error === TableReadError.Ok) {
@@ -130,7 +137,9 @@
     <Editor bind:document />
     <br />
   {:else}
-    <GraphCanvas />
+    <GraphCanvas
+    bind:instructions
+     />
     <br />
   {/if}
 
