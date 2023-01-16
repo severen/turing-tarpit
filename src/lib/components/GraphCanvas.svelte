@@ -58,7 +58,7 @@
   let edges: Map<number, Edge> = new Map();
   let used_node_ids: Set<number> = new Set();
 
-  let instructions: string;
+  export let instructions = "";
 
   onMount(() => {
     context = canvas.getContext("2d")!;
@@ -66,6 +66,10 @@
     contextStore.set(context);
     context.font = "15px mono";
   });
+
+  export function get_instructions(): string {
+    return instructions;
+  }
 
   // Return the smallest non negative integer that is not in used_node_ids
   function new_node_id(): number {
@@ -215,6 +219,9 @@
         const id = new_node_id();
         nodes.set(id, new_node(id, { x: mouse.x, y: mouse.y }));
         nodes.get(id)!.label = `q${id}`;
+        // State of the graph has changed so update the instruction string
+        instructions = instructions_from_graph(start_state, nodes, edges);
+        instructions = instructions;
         edit_node_index = -1;
         last_clicked_node = -1;
         edit_edge_index = -1;
@@ -237,8 +244,12 @@
       if (last_clicked_node === -1) {
         last_clicked_node = i;
       } else {
+        // New edge
         edges.set(new_edge_id(), new_edge(nodes.get(last_clicked_node)!, nodes.get(i)!));
         last_clicked_node = -1;
+        // State of the graph has changed so update the instruction string
+        instructions = instructions_from_graph(start_state, nodes, edges);
+        instructions = instructions;
       }
     } else if (j >= 0 && !mouse_moved()) {
       last_clicked_edge = j;
@@ -255,25 +266,35 @@
   function handle_key_down(event: any) {
     const key_down = event.key;
     if (key_down === "d") {
-      instructions_from_graph(start_state, nodes, edges);
+      console.log(instructions_from_graph(start_state, nodes, edges));
     }
     if (last_clicked_node >= 0 && edit_node_index < 0) {
       if (key_down === "Backspace") {
         remove_node(nodes, edges, used_node_ids, last_clicked_node);
+        // State of the graph has changed so update the instruction string
+        instructions = instructions_from_graph(start_state, nodes, edges);
+        instructions = instructions;
         console.log("Deleting Node " + last_clicked_node);
         last_clicked_node = -1;
         redraw();
       } else if (key_down === "s") {
         start_state = last_clicked_node;
+        instructions = instructions_from_graph(start_state, nodes, edges);
+        instructions = instructions;
         redraw();
       } else if (key_down === "Enter") {
         nodes.get(last_clicked_node)!.is_accept =
           !nodes.get(last_clicked_node)!.is_accept;
+        instructions = instructions_from_graph(start_state, nodes, edges);
+        instructions = instructions;
         redraw();
       }
     }
     if (last_clicked_edge >= 0 && key_down === "Backspace" && edit_edge_index < 0) {
+      // State of the graph has changed so update the instruction string
       remove_edge(edges, last_clicked_edge);
+      instructions = instructions_from_graph(start_state, nodes, edges);
+      instructions = instructions;
       redraw();
     }
     let obj: Node | Edge | undefined;
@@ -291,6 +312,7 @@
       obj.label = obj.label.concat(key_down);
       redraw();
     }
+    instructions = instructions_from_graph(start_state, nodes, edges);
   }
 </script>
 
