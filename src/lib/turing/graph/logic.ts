@@ -18,6 +18,14 @@ export type LabelBoundingBox = { top_left: Vec2d; width: number; height: number 
 
 export type Node = { id: number; pos: Vec2d; label: string; is_accept: boolean };
 export type Edge = { tail: Node; head: Node; label: string; h: number };
+export type TM_Graph = { start_node_id: number, nodes: Map<number, Node>, edges: Map<number, Edge>, used_node_ids: Set<number>, used_edge_ids: Set<number>};
+export const init_tm_graph = () => ({
+  start_node_id: -1,
+  nodes: new Map<number, Node>,
+  edges: new Map<number, Edge>,
+  used_node_ids: new Set<number>,
+  used_edge_ids: new Set<number>
+});
 
 export const new_node = (id: number, center: Vec2d): Node => ({
   id,
@@ -39,11 +47,10 @@ function parse_edge_label(label: string): string {
     .join(" ");
 }
 
-export function instructions_from_graph(
-  start_state_id: number,
-  nodes: Map<number, Node>,
-  edges: Map<number, Edge>,
-): string {
+export function instructions_from_graph(graph: TM_Graph): string {
+  const start_state_id = graph.start_node_id;
+  const nodes = graph.nodes;
+  const edges = graph.edges;
   const start_state =
     nodes.get(start_state_id) === undefined ? "" : nodes.get(start_state_id)?.label;
   const accept_states = [...nodes.values()]
@@ -71,6 +78,11 @@ export function instructions_from_graph(
 // Return true if p2 is on the left of p1
 export function on_left(p1: Vec2d, p2: Vec2d): boolean {
   return p2.x <= p1.x;
+}
+
+// Return true if p2 is above p1
+export function above(p1: Vec2d, p2: Vec2d): boolean {
+  return p2.y >= p1.y;
 }
 
 export function bearing_from_node(node: Node, mouse: Vec2d): number {

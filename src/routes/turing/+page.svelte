@@ -19,9 +19,11 @@
   } from "$lib/turing/tm";
   import { tm_read_result_display, tm_state_display } from "$lib/turing/display";
   import GraphCanvas from "$lib/components/GraphCanvas.svelte";
+  import { init_tm_graph, instructions_from_graph, type Edge, type Node } from "$lib/turing/graph/logic";
 
   let document: string;
   let instructions: string;
+  let graph = init_tm_graph();
 
   let tape_input_string = "";
   let tm_display_string = "";
@@ -36,7 +38,7 @@
   function read_document() {
     if (!text_input) {
       instructions = instructions;
-      document = instructions;
+      document = instructions_from_graph(graph);
       console.log(instructions);
     }
     const result = read_transition_table(document);
@@ -137,11 +139,12 @@
     <Editor bind:document />
     <br />
   {:else}
-    <GraphCanvas bind:instructions />
+    <GraphCanvas
+    bind:graph/>
     <br />
   {/if}
 
-  <Button on:click={switch_input_mode}>{text_input ? "Text" : "Graph"}</Button>
+  <Button on:click={switch_input_mode}>{text_input ? "Graph" : "<-"}</Button>
 
   <Button on:click={read_document}>Read</Button>
   <!-- Just loads the binary palindrome tm into the editor string -->

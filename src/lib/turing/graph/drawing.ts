@@ -29,6 +29,8 @@ export const SELF_EDGE_RATIO = 0.75;
 export const context = writable();
 export const canvas = writable();
 
+const SNAP_THRESHOLD = 10;
+
 export function in_bounds(pos: Vec2d): boolean {
   return pos.x >= 0 && pos.x <= width && pos.y >= 0 && pos.y <= height;
 }
@@ -65,13 +67,14 @@ export function edge_label_bounding_box(
 ): LabelBoundingBox {
   let label: Vec2d;
   const label_dims = context.measureText(edge.label);
+  const h = Math.abs(edge.h) > SNAP_THRESHOLD ? edge.h : 0;
   if (edge.head.id !== edge.tail.id) {
     const p1 = edge.tail.pos;
     const p2 = edge.head.pos;
     const v = normed(minus(p2, p1));
     const n = perp(v);
     const mid = plus(p1, times(norm(minus(p2, p1)) / 2, v));
-    label = plus(mid, times(edge.h, n));
+    label = plus(mid, times(h, n));
   } else {
     const node_center = edge.tail.pos;
     const c = {
@@ -214,7 +217,7 @@ export function draw_edge(
   edge: Edge,
   node_radius: number,
 ) {
-  if (edge.h === 0 && edge.tail.id !== edge.head.id) {
+  if (Math.abs(edge.h) <= SNAP_THRESHOLD && edge.tail.id !== edge.head.id) {
     draw_straight_edge(context, edge, node_radius);
   } else if (edge.head.id === edge.tail.id) {
     draw_self_edge(context, edge, node_radius);
