@@ -56,7 +56,6 @@
 
   export let graph = init_tm_graph();
 
-
   onMount(() => {
     context = canvas.getContext("2d")!;
     canvasStore.set(canvas);
@@ -210,7 +209,6 @@
         graph.nodes.get(id)!.label = `q${id}`;
         // State of the graph has changed so update the instruction string
 
-
         edit_node_index = -1;
         last_clicked_node = -1;
         edit_edge_index = -1;
@@ -234,11 +232,12 @@
         last_clicked_node = i;
       } else {
         // New edge
-        graph.edges.set(new_id(graph.used_edge_ids), new_edge(graph.nodes.get(last_clicked_node)!, graph.nodes.get(i)!));
+        graph.edges.set(
+          new_id(graph.used_edge_ids),
+          new_edge(graph.nodes.get(last_clicked_node)!, graph.nodes.get(i)!),
+        );
         last_clicked_node = -1;
         // State of the graph has changed so update the instruction string
-
-
       }
     } else if (j >= 0 && !mouse_moved()) {
       last_clicked_edge = j;
@@ -262,19 +261,16 @@
         remove_node(graph.nodes, graph.edges, graph.used_node_ids, last_clicked_node);
         // State of the graph has changed so update the instruction string
 
-
         console.log("Deleting Node " + last_clicked_node);
         last_clicked_node = -1;
         redraw();
       } else if (key_down === "s") {
         graph.start_node_id = last_clicked_node;
 
-
         redraw();
       } else if (key_down === "Enter") {
         graph.nodes.get(last_clicked_node)!.is_accept =
           !graph.nodes.get(last_clicked_node)!.is_accept;
-
 
         redraw();
       }
@@ -282,8 +278,6 @@
     if (last_clicked_edge >= 0 && key_down === "Backspace" && edit_edge_index < 0) {
       // State of the graph has changed so update the instruction string
       remove_edge(graph.edges, last_clicked_edge);
-
-
       redraw();
     }
     let obj: Node | Edge | undefined;
@@ -301,7 +295,6 @@
       obj.label = obj.label.concat(key_down);
       redraw();
     }
-
   }
 </script>
 

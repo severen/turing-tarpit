@@ -19,7 +19,12 @@
   } from "$lib/turing/tm";
   import { tm_read_result_display, tm_state_display } from "$lib/turing/display";
   import GraphCanvas from "$lib/components/GraphCanvas.svelte";
-  import { init_tm_graph, instructions_from_graph, type Edge, type Node } from "$lib/turing/graph/logic";
+  import {
+    init_tm_graph,
+    instructions_from_graph,
+    type Edge,
+    type Node,
+  } from "$lib/turing/graph/logic";
 
   let document: string;
   let instructions: string;
@@ -35,7 +40,7 @@
   let display_index = 0;
   const max_steps = 150;
 
-  function read_document() {
+  function initialize() {
     if (!text_input) {
       instructions = instructions;
       document = instructions_from_graph(graph);
@@ -139,30 +144,24 @@
     <Editor bind:document />
     <br />
   {:else}
-    <GraphCanvas
-    bind:graph/>
+    <GraphCanvas bind:graph />
     <br />
   {/if}
-
-  <Button on:click={switch_input_mode}>{text_input ? "Graph" : "<-"}</Button>
-
-  <Button on:click={read_document}>Read</Button>
-  <!-- Just loads the binary palindrome tm into the editor string -->
-  <label for="tm-read-output">Read Instructions:</label>
-  <Button on:click={read_debug}>Debug</Button>
 </div>
 
 <div>
+  <Button on:click={switch_input_mode}>{text_input ? "Graph" : "<-"}</Button>
+  <!-- Just loads the binary palindrome tm into the editor string -->
+  <Button on:click={read_debug}>Debug</Button>
   <textarea
-    class="mr-2 mb-2 border-2 font-mono text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+    class="pd-2 border-2 font-mono text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
     id="tm-read-output"
     name="tm-read-output"
-    rows={text_input ? 10 : 1}
-    cols={75}
+    rows={!successful_read ? tm_display_string.split("\n").length : 1}
+    cols={60}
     readonly={true}
-    wrap="soft"
   >
-    {tm_display_string}
+    {successful_read ? "Valid Turing Machine." : tm_display_string}
   </textarea>
 </div>
 
@@ -170,25 +169,21 @@
 <input
   class="mr-2 border-2 font-mono text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
   bind:value={tape_input_string}
-  on:change={read_document}
+  on:change={initialize}
 />
 
-<Button on:click={step_back}>Step Back</Button>
+<Button on:click={initialize}>Write to tape</Button>
 
-<Button on:click={step_forward}>Step Forward</Button>
+<Button on:click={initialize}>{"<<"}</Button>
 
-<Button on:click={run}>Run</Button>
+<Button on:click={step_back}>{"<="}</Button>
+
+<Button on:click={step_forward}>{"=>"}</Button>
+
+<Button on:click={run}>{">>"}</Button>
 
 <div>
-  <textarea
-    class="mr-2 mb-2 border-2 font-mono text-sm  dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-    id="tm-tape"
-    name="tm-tape"
-    rows={5}
-    cols={75}
-    readonly={true}
-    wrap="soft"
-  >
+  <pre class="bg-surface0 outline-overlay2 flex-auto p-2 outline outline-1">
     {"\n" + tape_display_string}
-  </textarea>
+  </pre>
 </div>

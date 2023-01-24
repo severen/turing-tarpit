@@ -77,12 +77,12 @@ export function edge_label_bounding_box(
     label = plus(mid, times(h, n));
   } else {
     const node_center = edge.tail.pos;
-    const c = {
+    const y_offset = NODE_RADIUS * SELF_EDGE_RATIO;
+    const b = {
       x: edge.tail.pos.x,
-      y: edge.tail.pos.y - (0.9 + SELF_EDGE_RATIO) * NODE_RADIUS,
+      y: edge.tail.pos.y - (0.9 + SELF_EDGE_RATIO) * NODE_RADIUS - y_offset,
     };
-    const t = rotate(node_center, c, edge.h);
-    label = { x: t.x, y: t.y - NODE_RADIUS * SELF_EDGE_RATIO };
+    label = rotate(node_center, b, edge.h);
   }
   return {
     top_left: {

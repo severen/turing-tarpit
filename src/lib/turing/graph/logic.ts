@@ -18,13 +18,19 @@ export type LabelBoundingBox = { top_left: Vec2d; width: number; height: number 
 
 export type Node = { id: number; pos: Vec2d; label: string; is_accept: boolean };
 export type Edge = { tail: Node; head: Node; label: string; h: number };
-export type TM_Graph = { start_node_id: number, nodes: Map<number, Node>, edges: Map<number, Edge>, used_node_ids: Set<number>, used_edge_ids: Set<number>};
+export type TM_Graph = {
+  start_node_id: number;
+  nodes: Map<number, Node>;
+  edges: Map<number, Edge>;
+  used_node_ids: Set<number>;
+  used_edge_ids: Set<number>;
+};
 export const init_tm_graph = () => ({
   start_node_id: -1,
-  nodes: new Map<number, Node>,
-  edges: new Map<number, Edge>,
-  used_node_ids: new Set<number>,
-  used_edge_ids: new Set<number>
+  nodes: new Map<number, Node>(),
+  edges: new Map<number, Edge>(),
+  used_node_ids: new Set<number>(),
+  used_edge_ids: new Set<number>(),
 });
 
 export const new_node = (id: number, center: Vec2d): Node => ({
