@@ -4,8 +4,6 @@
 %% Common Packages and Configuration
 
 %% Layout and Style %%
-\usepackage{minted}
-\usepackage{enumitem}
 \usepackage{booktabs}
 \usepackage{bookmark}
 \usepackage{xcolor}
@@ -85,8 +83,21 @@
 \newcommand*{\hex}[1]{\mathrm{#1}_{16}}
 
 % λ-calculus
-\newcommand*{\labs}[2]{(λ#1.\, #2)}
-\newcommand*{\lapp}[2]{(#1 \: #2)}
+\NewDocumentCommand{\labs}{s m m}{
+  \IfBooleanTF {#1}
+    {(λ#2.\, #3)}
+    {λ#2.\, #3}
+}
+\NewDocumentCommand{\lapp}{s m m}{
+  \IfBooleanTF {#1}
+    {(#2 \ #3)}
+    {#2 \ #3}
+}
+\NewDocumentCommand{\lshiftt}{m o}{
+  \IfNoValueTF {#2}
+    {{\uparrow}^{#1}}
+    {{\uparrow}^{#1}_{#2}}
+}
 
 %% Language %%
 \usepackage{csquotes}
