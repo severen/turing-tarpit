@@ -8,6 +8,9 @@ module.exports = {
   content: ["./src/**/*.{html,svelte,js,ts}"],
   darkMode: "class",
   theme: {
-    extend: {},
+    fontFamily: {
+      mono: ["JetBrains Mono", "Cascadia Code", "Hack", "Menlo", "monospace"],
+    },
   },
+  plugins: [require("@catppuccin/tailwindcss")],
 };

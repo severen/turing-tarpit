@@ -5,6 +5,7 @@
 -->
 <script lang="ts">
   import { applications } from "$lib/applications";
+  import Link from "$lib/components/Link.svelte";
 </script>
 
 <!-- TODO: Make this prettier. -->
@@ -16,9 +17,9 @@
 <ul class="ml-4">
   {#each applications as { name, description, url }}
     <li>
-      <a class="hover:text-red-700 dark:hover:text-red-200" href={url}>
+      <Link href={url}>
         {name} &mdash; {description}
-      </a>
+      </Link>
     </li>
   {/each}
 </ul>

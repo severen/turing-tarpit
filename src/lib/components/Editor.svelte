@@ -8,44 +8,126 @@
   import { EditorView } from "@codemirror/view";
   import { basicSetup } from "codemirror";
   import { onMount } from "svelte";
+  import { variants } from "@catppuccin/palette";
 
   import { isDarkTheme } from "$lib/stores/theme";
 
   export let document = "";
 
+  const ctpLatte = variants.latte;
+  const ctpMacchiato = variants.macchiato;
+
   const baseTheme = EditorView.baseTheme({
     "&": {
-      height: "11rem",
+      // TODO: Make the editor height be dynamic to fill up a certain portion of
+      // the available space in the viewport.
+      height: "14.5rem",
     },
     "&.cm-editor.cm-focused": {
       outline: "unset",
     },
-    ".cm-content, .cm-scroller": {
-      fontFamily: "Hack, 'Cascadia Code', 'Jetbrains Mono', Menlo, monospace",
+    ".cm-scroller": {
+      overflow: "auto",
+      // NOTE: This should be kept in sync with the monospace fonts listed in
+      //       tailwind.config.js.
+      fontFamily: "'JetBrains Mono', 'Cascadia Code', Hack, Menlo, monospace",
+    },
+    ".cm-gutters": {
+      border: "none",
+    },
+    ".cm-activeLine, .cm-activeLineGutter": {
+      backgroundColor: "inherit",
     },
   });
 
-  const darkTheme = EditorView.theme(
+  const lightTheme = EditorView.theme(
     {
+      "&": {
+        backgroundColor: ctpLatte.surface0.rgb,
+      },
       ".cm-content": {
-        caretColor: "white",
+        caretColor: ctpLatte.text.rgb,
       },
       "&.cm-focused .cm-cursor": {
-        borderLeftColor: "white",
+        borderLeftColor: ctpLatte.text.rgb,
+      },
+      ".cm-gutters": {
+        color: ctpLatte.text.rgb,
+        backgroundColor: ctpLatte.surface1.rgb,
+      },
+      // Some transparency (30%) is added to ensure highlights are not covered on the
+      // active line.
+      "&.cm-focused .cm-activeLine, &.cm-focused .cm-activeLineGutter": {
+        backgroundColor: ctpLatte.surface2.hex + "4D",
+      },
+      ".cm-selectionBackground": {
+        backgroundColor: ctpLatte.overlay1.rgb,
+      },
+      "&.cm-focused .cm-selectionBackground, ::selection": {
+        backgroundColor: ctpLatte.overlay0.rgb,
+      },
+      ".cm-selectionMatch": {
+        backgroundColor: ctpLatte.overlay0.rgb,
+        outline: `1px solid ${ctpLatte.overlay2.rgb}`,
+      },
+      "&.cm-focused .cm-matchingBracket": {
+        backgroundColor: ctpLatte.overlay0.rgb,
+      },
+      "&.cm-focused .cm-nonmatchingBracket": {
+        backgroundColor: ctpLatte.rosewater.rgb,
+      },
+    },
+    { dark: false },
+  );
+
+  const darkTheme = EditorView.theme(
+    {
+      "&": {
+        backgroundColor: ctpMacchiato.surface0.rgb,
+      },
+      ".cm-content": {
+        caretColor: ctpMacchiato.text.rgb,
+      },
+      "&.cm-focused .cm-cursor": {
+        borderLeftColor: ctpMacchiato.text.rgb,
+      },
+      ".cm-gutters": {
+        color: ctpMacchiato.text.rgb,
+        backgroundColor: ctpMacchiato.surface1.rgb,
+      },
+      "&.cm-focused .cm-activeLine, &.cm-focused .cm-activeLineGutter": {
+        // Some transparency (30%) is added to ensure highlights are not covered on the
+        // active line.
+        backgroundColor: ctpMacchiato.surface2.hex + "4D",
+      },
+      ".cm-selectionBackground": {
+        backgroundColor: ctpMacchiato.overlay1.rgb,
+      },
+      "&.cm-focused .cm-selectionBackground, .cm-content ::selection": {
+        backgroundColor: ctpMacchiato.overlay0.rgb,
+      },
+      ".cm-selectionMatch": {
+        backgroundColor: ctpMacchiato.overlay0.rgb,
+        outline: `1px solid ${ctpMacchiato.overlay2.rgb}`,
+      },
+      "&.cm-focused .cm-matchingBracket": {
+        backgroundColor: ctpMacchiato.overlay0.rgb,
+      },
+      "&.cm-focused .cm-nonmatchingBracket": {
+        color: ctpMacchiato.crust.rgb,
+        backgroundColor: ctpMacchiato.red.rgb,
       },
     },
     { dark: true },
   );
 
-  const lightTheme = EditorView.theme({}, { dark: false });
-
-  let theme = new Compartment();
+  let currentTheme = new Compartment();
   let editorContainer: Element;
   onMount(() => {
     const editor = new EditorView({
       doc: document,
       parent: editorContainer,
-      extensions: [basicSetup, baseTheme, theme.of(lightTheme)],
+      extensions: [basicSetup, baseTheme, currentTheme.of(lightTheme)],
 
       // TODO: Devise a nicer way to do this, if possible.
       // Intercept all transactions and copy the updated editor state to the
@@ -58,9 +140,9 @@
 
     isDarkTheme.subscribe((isDarkTheme) => {
       if (isDarkTheme) {
-        editor.dispatch({ effects: theme.reconfigure(darkTheme) });
+        editor.dispatch({ effects: currentTheme.reconfigure(darkTheme) });
       } else {
-        editor.dispatch({ effects: theme.reconfigure(lightTheme) });
+        editor.dispatch({ effects: currentTheme.reconfigure(lightTheme) });
       }
     });
 
@@ -73,4 +155,4 @@
   });
 </script>
 
-<div class="outline outline-1" bind:this={editorContainer} />
+<div class="outline outline-1 outline-overlay2" bind:this={editorContainer} />

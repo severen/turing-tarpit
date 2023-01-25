@@ -21,6 +21,8 @@
     "prepare": "is-ci || husky install"
   },
   "devDependencies": {
+    "@catppuccin/palette": "^0.1.5",
+    "@catppuccin/tailwindcss": "^0.1.1",
     "@codemirror/commands": "^6.2.0",
     "@codemirror/state": "^6.2.0",
     "@codemirror/view": "^6.7.3",

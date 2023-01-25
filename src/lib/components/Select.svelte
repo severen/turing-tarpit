@@ -5,12 +5,15 @@
 -->
 <script lang="ts">
   export let title: string | undefined = undefined;
+  export let values: { name: string; value: any }[];
   export let color: "red" | "green" | undefined = undefined;
+
+  export let value: any;
 
   let colorClasses: string;
   switch (color) {
     case undefined:
-      colorClasses = "bg-surface2";
+      colorClasses = "bg-surface0";
       break;
     case "red":
       colorClasses = "bg-red text-base";
@@ -19,13 +22,17 @@
       colorClasses = "bg-green text-base";
       break;
   }
+
+  let i = 0;
+  $: value = values[i].value;
 </script>
 
-<button
-  class="p-2 outline outline-1 outline-overlay2 hover:bg-yellow hover:text-base focus:bg-peach focus:text-base {colorClasses}"
-  type="button"
+<select
+  class="p-2 outline outline-1 outline-overlay2 hover:cursor-pointer hover:bg-yellow hover:text-base focus:bg-peach focus:text-base {colorClasses}"
   {title}
-  on:click
+  bind:value={i}
 >
-  <slot />
-</button>
+  {#each values as { name }, i}
+    <option value={i}>{name}</option>
+  {/each}
+</select>

@@ -4,7 +4,7 @@
   SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 <script lang="ts">
-  import "../main.css";
+  import "../main.pcss";
 
   import Theme from "$lib/components/Theme.svelte";
   import Navbar from "$lib/components/Navbar.svelte";
@@ -20,15 +20,13 @@
 </svelte:head>
 
 <Theme>
-  <div class="min-h-screen">
-    <div class="mx-auto max-w-screen-md p-4">
-      <header class="mb-4">
-        <Navbar />
-      </header>
+  <div class="mx-auto min-h-screen max-w-screen-md p-4">
+    <header class="mb-4 md:mb-6">
+      <Navbar />
+    </header>
 
-      <main>
-        <slot />
-      </main>
-    </div>
+    <main>
+      <slot />
+    </main>
   </div>
 </Theme>
