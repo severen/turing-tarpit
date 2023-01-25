@@ -183,7 +183,7 @@
 <Button on:click={run}>{">>"}</Button>
 
 <div>
-  <pre class="bg-surface0 outline-overlay2 flex-auto p-2 outline outline-1">
+  <pre class="flex-auto bg-surface0 p-2 outline outline-1 outline-overlay2">
     {"\n" + tape_display_string}
   </pre>
 </div>
