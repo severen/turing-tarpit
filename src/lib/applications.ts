@@ -27,5 +27,4 @@ export const applications: Application[] = [
     description: "create and test Turing machines",
     url: "/turing",
   },
-  { name: "Automata", description: "create and test automata", url: "/automata" },
 ];
