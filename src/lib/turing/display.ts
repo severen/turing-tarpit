@@ -61,7 +61,7 @@ export function tm_read_result_display(
           ? "Read Turing Machine has Non-deterministic transitions"
           : "Read Error"
       }\n` +
-      "-".repeat(53) +
+      "-".repeat(20) +
       "\n";
     for (const [i, line] of input.split("\n").entries()) {
       if (i === result.linenum) {

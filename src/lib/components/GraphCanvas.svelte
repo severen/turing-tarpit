@@ -14,6 +14,8 @@
     edge_label_bounding_box,
     draw_node,
     draw_start_arrow,
+    draw_edge_label,
+    in_bounds,
   } from "$lib/turing/graph/drawing";
   import {
     in_circle,
@@ -25,6 +27,12 @@
     new_edge,
     remove_node,
     remove_edge,
+    bearing_from_node,
+    on_left,
+    instructions_from_graph,
+    type TM_Graph,
+    above,
+    init_tm_graph,
   } from "$lib/turing/graph/logic";
 
   let canvas: HTMLCanvasElement;
@@ -46,27 +54,24 @@
   let last_clicked_node = -1;
   let last_clicked_edge = -1;
 
-  let node_count = -1;
-  let edge_count = -1;
-  let start_state = -1;
-  let nodes: Map<number, Node> = new Map();
-  let edges: Map<number, Edge> = new Map();
+  export let graph = init_tm_graph();
 
   onMount(() => {
     context = canvas.getContext("2d")!;
     canvasStore.set(canvas);
     contextStore.set(context);
     context.font = "15px mono";
+    redraw();
   });
 
-  function new_node_id(): number {
-    node_count++;
-    return node_count;
-  }
-
-  function new_edge_id(): number {
-    edge_count++;
-    return edge_count;
+  // Return the smallest non negative integer that is not in used_node_ids
+  function new_id(used: Set<number>): number {
+    let i = 0;
+    while (used.has(i)) {
+      i++;
+    }
+    used.add(i);
+    return i;
   }
 
   // Return the id of the node the mouse is in, otherwise return -1
@@ -95,18 +100,12 @@
     context.lineWidth = 2;
 
     //Draw edges
-    for (const [i, edge] of edges.entries()) {
-      draw_edge(
-        context,
-        edge,
-        node_radius,
-        i === edit_edge_index,
-        i === last_clicked_edge,
-      );
+    for (const [i, edge] of graph.edges.entries()) {
+      draw_edge(context, edge, node_radius);
     }
 
     //Draw nodes
-    for (const [id, node] of nodes.entries()) {
+    for (const [id, node] of graph.nodes.entries()) {
       draw_node(
         context,
         node,
@@ -115,8 +114,13 @@
         id === last_clicked_node,
       );
     }
-    if (start_state >= 0 && nodes.has(start_state)) {
-      draw_start_arrow(context, nodes.get(start_state)!, node_radius);
+    //Draw edge labels
+    for (const [id, edge] of graph.edges.entries()) {
+      draw_edge_label(context, edge, id === edit_edge_index, id === last_clicked_edge);
+    }
+
+    if (graph.start_node_id >= 0 && graph.nodes.has(graph.start_node_id)) {
+      draw_start_arrow(context, graph.nodes.get(graph.start_node_id)!, node_radius);
     }
   }
 
@@ -141,15 +145,25 @@
     const last_y = mouse.y;
     mouse.x = clientX - rect.left;
     mouse.y = clientY - rect.top;
-    if (node_moving) {
-      const dx = mouse.x - last_x;
-      const dy = mouse.y - last_y;
-      nodes.get(moving_node_index)!.pos.x += dx;
-      nodes.get(moving_node_index)!.pos.y += dy;
+    let dx = mouse.x - last_x;
+    let dy = mouse.y - last_y;
+    if (node_moving && in_bounds(mouse)) {
+      graph.nodes.get(moving_node_index)!.pos.x += dx;
+      graph.nodes.get(moving_node_index)!.pos.y += dy;
     }
-    if (edge_moving) {
-      const dy = mouse.y - last_y;
-      edges.get(moving_edge_index)!.h += dy;
+    if (edge_moving && in_bounds(mouse)) {
+      const head = graph.edges.get(moving_edge_index)!.head;
+      const tail = graph.edges.get(moving_edge_index)!.tail;
+      if (head.id !== tail.id) {
+        if (!on_left(head.pos, tail.pos) && !above(head.pos, tail.pos)) {
+          dx = -dx;
+          dy = -dy;
+        }
+        graph.edges.get(moving_edge_index)!.h += Math.abs(dx) >= Math.abs(dy) ? dx : dy;
+      } else {
+        const node = graph.edges.get(moving_edge_index)!.head;
+        graph.edges.get(moving_edge_index)!.h = bearing_from_node(node, mouse);
+      }
     }
 
     if (mouse_down) {
@@ -159,8 +173,8 @@
 
   function handle_mouse_down(event: any) {
     mouse_down = true;
-    const selected_node_index = selected_node(nodes, mouse);
-    const selected_edge_index = selected_edge(edges, mouse);
+    const selected_node_index = selected_node(graph.nodes, mouse);
+    const selected_edge_index = selected_edge(graph.edges, mouse);
 
     // Move node with mouse
     if (selected_node_index >= 0) {
@@ -190,9 +204,11 @@
         edit_node_index = -1;
       } else {
         // Create a new node
-        const id = new_node_id();
-        nodes.set(id, new_node(id, { x: mouse.x, y: mouse.y }));
-        nodes.get(id)!.label = `q${id}`;
+        const id = new_id(graph.used_node_ids);
+        graph.nodes.set(id, new_node(id, { x: mouse.x, y: mouse.y }));
+        graph.nodes.get(id)!.label = `q${id}`;
+        // State of the graph has changed so update the instruction string
+
         edit_node_index = -1;
         last_clicked_node = -1;
         edit_edge_index = -1;
@@ -209,14 +225,19 @@
 
   function handle_mouse_up(event: any) {
     handle_mouse_move(event);
-    const i = selected_node(nodes, mouse);
-    const j = selected_edge(edges, mouse);
+    const i = selected_node(graph.nodes, mouse);
+    const j = selected_edge(graph.edges, mouse);
     if (i >= 0 && !mouse_moved()) {
       if (last_clicked_node === -1) {
         last_clicked_node = i;
       } else {
-        edges.set(new_edge_id(), new_edge(nodes.get(last_clicked_node)!, nodes.get(i)!));
+        // New edge
+        graph.edges.set(
+          new_id(graph.used_edge_ids),
+          new_edge(graph.nodes.get(last_clicked_node)!, graph.nodes.get(i)!),
+        );
         last_clicked_node = -1;
+        // State of the graph has changed so update the instruction string
       }
     } else if (j >= 0 && !mouse_moved()) {
       last_clicked_edge = j;
@@ -232,30 +253,38 @@
 
   function handle_key_down(event: any) {
     const key_down = event.key;
+    if (key_down === "d") {
+      console.log(instructions_from_graph(graph));
+    }
     if (last_clicked_node >= 0 && edit_node_index < 0) {
       if (key_down === "Backspace") {
-        remove_node(nodes, edges, last_clicked_node);
+        remove_node(graph.nodes, graph.edges, graph.used_node_ids, last_clicked_node);
+        // State of the graph has changed so update the instruction string
+
         console.log("Deleting Node " + last_clicked_node);
         last_clicked_node = -1;
         redraw();
       } else if (key_down === "s") {
-        start_state = last_clicked_node;
+        graph.start_node_id = last_clicked_node;
+
         redraw();
       } else if (key_down === "Enter") {
-        nodes.get(last_clicked_node)!.is_accept =
-          !nodes.get(last_clicked_node)!.is_accept;
+        graph.nodes.get(last_clicked_node)!.is_accept =
+          !graph.nodes.get(last_clicked_node)!.is_accept;
+
         redraw();
       }
     }
     if (last_clicked_edge >= 0 && key_down === "Backspace" && edit_edge_index < 0) {
-      remove_edge(edges, last_clicked_edge);
+      // State of the graph has changed so update the instruction string
+      remove_edge(graph.edges, last_clicked_edge);
       redraw();
     }
     let obj: Node | Edge | undefined;
     if (edit_edge_index >= 0) {
-      obj = edges.get(edit_edge_index)!;
+      obj = graph.edges.get(edit_edge_index)!;
     } else if (edit_node_index >= 0) {
-      obj = nodes.get(edit_node_index)!;
+      obj = graph.nodes.get(edit_node_index)!;
     } else {
       return;
     }
