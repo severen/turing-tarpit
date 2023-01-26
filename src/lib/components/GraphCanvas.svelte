@@ -6,10 +6,6 @@
 <script lang="ts">
   import { onMount, onDestroy, setContext } from "svelte";
   import {
-    width,
-    height,
-    canvas as canvasStore,
-    context as contextStore,
     draw_edge,
     edge_label_bounding_box,
     draw_node,
@@ -57,9 +53,9 @@
   export let graph = init_tm_graph();
 
   onMount(() => {
+    canvas.width = 732;
+    canvas.height = canvas.width * 0.5;
     context = canvas.getContext("2d")!;
-    canvasStore.set(canvas);
-    contextStore.set(context);
     context.font = "15px mono";
     redraw();
   });
@@ -96,7 +92,7 @@
   }
 
   function redraw() {
-    context.clearRect(0, 0, width, height);
+    context.clearRect(0, 0, canvas.width, canvas.height);
     context.lineWidth = 2;
 
     //Draw edges
@@ -147,11 +143,11 @@
     mouse.y = clientY - rect.top;
     let dx = mouse.x - last_x;
     let dy = mouse.y - last_y;
-    if (node_moving && in_bounds(mouse)) {
+    if (node_moving && in_bounds(canvas, mouse)) {
       graph.nodes.get(moving_node_index)!.pos.x += dx;
       graph.nodes.get(moving_node_index)!.pos.y += dy;
     }
-    if (edge_moving && in_bounds(mouse)) {
+    if (edge_moving && in_bounds(canvas, mouse)) {
       const head = graph.edges.get(moving_edge_index)!.head;
       const tail = graph.edges.get(moving_edge_index)!.tail;
       if (head.id !== tail.id) {
@@ -206,9 +202,10 @@
         // Create a new node
         const id = new_id(graph.used_node_ids);
         graph.nodes.set(id, new_node(id, { x: mouse.x, y: mouse.y }));
+        console.log(graph.nodes.get(id)!.pos.x, graph.nodes.get(id)!.pos.y);
+        console.log(mouse.x, mouse.y);
         graph.nodes.get(id)!.label = `q${id}`;
-        // State of the graph has changed so update the instruction string
-
+        //Unselect
         edit_node_index = -1;
         last_clicked_node = -1;
         edit_edge_index = -1;
@@ -308,7 +305,5 @@
 <canvas
   id="graph-canvas"
   bind:this={canvas}
-  {width}
-  {height}
-  class="mr-2 border-2  dark:border-gray-300 dark:bg-gray-800 dark:text-white"
+  class="w-full bg-surface0 outline outline-1 outline-overlay2"
 />

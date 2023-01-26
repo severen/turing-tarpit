@@ -6,6 +6,7 @@
 
 import { getContext, onMount, onDestroy } from "svelte";
 import { writable, derived } from "svelte/store";
+import { variants } from "@catppuccin/palette";
 
 import {
   minus,
@@ -20,19 +21,17 @@ import {
   type Vec2d,
 } from "./logic";
 
-export const width = 732;
-export const height = 2 * 172;
 export const ARROW_SIZE = 10;
 export const TEXT_BOX_MARGIN = 5;
 export const NODE_RADIUS = 20;
 export const SELF_EDGE_RATIO = 0.75;
-export const context = writable();
-export const canvas = writable();
+const ctpLatte = variants.latte;
+const ctpMacchiato = variants.macchiato;
 
 const SNAP_THRESHOLD = 10;
 
-export function in_bounds(pos: Vec2d): boolean {
-  return pos.x >= 0 && pos.x <= width && pos.y >= 0 && pos.y <= height;
+export function in_bounds(canvas: HTMLCanvasElement, pos: Vec2d): boolean {
+  return pos.x >= 0 && pos.x <= canvas.width && pos.y >= 0 && pos.y <= canvas.height;
 }
 
 function rotate(pivot: Vec2d, v: Vec2d, theta: number): Vec2d {
@@ -110,7 +109,7 @@ export function draw_edge_label(
   if (editing) {
     context.setLineDash([5, 5]);
   }
-  context.fillStyle = "#1F2937";
+  context.fillStyle = ctpMacchiato.surface0.rgb;
   context.fillRect(
     bounding_box.top_left.x,
     bounding_box.top_left.y,
@@ -234,7 +233,7 @@ export function draw_node(
   selected: boolean,
 ) {
   //Draw over arcs
-  context.fillStyle = "#1F2937";
+  context.fillStyle = ctpMacchiato.surface0.rgb;
   context.beginPath();
   context.arc(node.pos.x, node.pos.y, node_radius, 0, 2 * Math.PI, true);
   context.closePath();
@@ -277,7 +276,7 @@ export function draw_start_arrow(
 ) {
   context.beginPath();
 
-  if (start_node.pos.x <= width / 2) {
+  if (start_node.pos.x <= context.canvas.width / 2) {
     context.moveTo(start_node.pos.x - node_radius, start_node.pos.y);
     context.lineTo(start_node.pos.x - 3 * node_radius, start_node.pos.y);
     context.stroke();

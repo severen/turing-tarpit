@@ -6,6 +6,10 @@
 <script lang="ts">
   import Editor from "$lib/components/Editor.svelte";
   import Button from "$lib/components/Button.svelte";
+  import Rewind from "$lib/components/icons/Rewind.svelte";
+  import FastForward from "$lib/components/icons/FastForward.svelte";
+  import Left from "$lib/components/icons/Left.svelte";
+  import Right from "$lib/components/icons/Right.svelte";
 
   import {
     starting_state,
@@ -139,49 +143,44 @@
   }
 </script>
 
-<div>
-  {#if text_input}
-    <Editor bind:document />
-    <br />
-  {:else}
-    <GraphCanvas bind:graph />
-    <br />
-  {/if}
-</div>
+{#if text_input}
+  <Editor bind:document />
+{:else}
+  <GraphCanvas bind:graph />
+{/if}
 
-<div>
+<div class="flex">
   <Button on:click={switch_input_mode}>{text_input ? "Graph" : "<-"}</Button>
   <!-- Just loads the binary palindrome tm into the editor string -->
   <Button on:click={read_debug}>Debug</Button>
   <textarea
-    class="pd-2 border-2 font-mono text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+    class="pd-2 flex-auto bg-surface0 p-2 font-mono text-sm outline outline-1 outline-overlay2"
     id="tm-read-output"
     name="tm-read-output"
     rows={!successful_read ? tm_display_string.split("\n").length : 1}
-    cols={60}
     readonly={true}
   >
     {successful_read ? "Valid Turing Machine." : tm_display_string}
   </textarea>
 </div>
 
-<label for="tm-read-string">Tape Input:</label>
-<input
-  class="mr-2 border-2 font-mono text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-  bind:value={tape_input_string}
-  on:change={initialize}
-/>
+<div class="mb-2 mt-2 flex">
+  <pre class="mb-2 mt-2">Tape Input:</pre>
+  <input
+    class="mr-2 bg-surface0 p-2 font-mono text-sm outline outline-1 outline-overlay2"
+    bind:value={tape_input_string}
+    on:change={initialize}
+  />
+  <Button on:click={initialize}>Write to tape</Button>
 
-<Button on:click={initialize}>Write to tape</Button>
+  <Button on:click={initialize}><Rewind /></Button>
 
-<Button on:click={initialize}>{"<<"}</Button>
+  <Button on:click={step_back}><Left /></Button>
 
-<Button on:click={step_back}>{"<="}</Button>
+  <Button on:click={step_forward}><Right /></Button>
 
-<Button on:click={step_forward}>{"=>"}</Button>
-
-<Button on:click={run}>{">>"}</Button>
-
+  <Button on:click={run}><FastForward /></Button>
+</div>
 <div>
   <pre class="flex-auto bg-surface0 p-2 outline outline-1 outline-overlay2">
     {"\n" + tape_display_string}
