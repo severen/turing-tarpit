@@ -58,6 +58,18 @@ export const mkApp = (left: Term, right: Term): App => ({
   right,
 });
 
+/** A syntax error in a λ-calculus program. */
+export class SyntaxError extends Error {
+  /** The start location of this syntax error within the input. */
+  position: number;
+
+  constructor(position: number, message: string) {
+    super(message);
+    this.name = "SyntaxError";
+    this.position = position;
+  }
+}
+
 /** Get the free variables contained in a term. */
 export function freeVars(t: Term): Set<Name> {
   switch (t.kind) {
