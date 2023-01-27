@@ -58,14 +58,13 @@ class Parser {
 
   /** Parse the term nonterminal. */
   #term(): Term {
-    const token = this.#peek();
-    return token.kind === TokenKind.Lambda ? this.#abs() : this.#app();
+    return this.#peek().kind === TokenKind.Lambda ? this.#abs() : this.#app();
   }
 
   /** Parse the abstraction nonterminal. */
   #abs(): Abs {
     this.#consume(TokenKind.Lambda);
-    const head = [];
+    const head = [this.#ident()];
     while (this.#peek().kind === TokenKind.Ident) {
       head.push(this.#ident());
     }
@@ -117,7 +116,7 @@ class Parser {
   /** Parse an identifier. */
   #ident(): string {
     if (this.#peek().kind !== TokenKind.Ident) {
-      throw new SyntaxError(this.#position, "expected identifier");
+      throw new SyntaxError(this.#position, "an identifier was expected");
     }
 
     const ident = this.#peek().lexeme;
@@ -137,7 +136,7 @@ class Parser {
       this.#position += 1;
     } else {
       let wanted;
-      switch (token.kind) {
+      switch (kind) {
         case TokenKind.Lambda:
           wanted = "a λ or \\";
           break;

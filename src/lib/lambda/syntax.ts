@@ -64,7 +64,7 @@ export class SyntaxError extends Error {
   position: number;
 
   constructor(position: number, message: string) {
-    super(message);
+    super(`${message} (at position ${position})`);
     this.name = "SyntaxError";
     this.position = position;
   }
