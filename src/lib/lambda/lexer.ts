@@ -75,8 +75,12 @@ class Lexer {
       case "-": {
         if (this.#match(">")) {
           this.#pushToken(TokenKind.RArrow);
+        } else if (this.#match("-")) {
+          while (!this.#match("\n") && !this.#isAtEnd()) {
+            this.#advance();
+          }
         } else {
-          throw new SyntaxError(this.#start, "got invalid token -");
+          throw new SyntaxError(this.#start, "got invalid token -, expected -> or --");
         }
         break;
       }

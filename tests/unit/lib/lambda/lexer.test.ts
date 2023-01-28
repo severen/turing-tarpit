@@ -61,4 +61,10 @@ describe("λ-calculus Lexer", async () => {
     expect(lex("\n")).toEqual([{ kind: TokenKind.EOF, lexeme: "", position: 1 }]);
     expect(lex("\r\n")).toEqual([{ kind: TokenKind.EOF, lexeme: "", position: 2 }]);
   });
+
+  it("ignores line comments", async () => {
+    expect(lex("-- informative comment")).toEqual([
+      { kind: TokenKind.EOF, lexeme: "", position: 22 },
+    ]);
+  });
 });
