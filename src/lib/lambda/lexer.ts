@@ -6,6 +6,14 @@
 
 import { SyntaxError } from "$lib/lambda/syntax";
 
+/** A lexical token. */
+export type Token = {
+  kind: TokenKind;
+  lexeme: string;
+  position: number;
+};
+
+/** The kind of a Token. */
 export enum TokenKind {
   /** A `λ` character, or its ASCII stand-in, `\`. */
   Lambda,
@@ -21,13 +29,7 @@ export enum TokenKind {
   EOF,
 }
 
-export type Token = {
-  kind: TokenKind;
-  lexeme: string;
-  position: number;
-};
-
-/** Syntactically analyse, i.e. lex, a potential λ-calculus term. */
+/** Syntactically analyse, or lex, a potential λ-calculus term. */
 export function lex(input: string): Token[] {
   return new Lexer(input).lex();
 }
@@ -38,75 +40,101 @@ class Lexer {
   #input: string;
   /** The current character position of this lexer within the input string. */
   #position = 0;
+  /** The character position of the start of the current token. */
+  #start = 0;
+
+  /** The lexically analysed tokens. */
+  #tokens: Token[] = [];
 
   readonly #reIdent = /^\p{ID_Start}\p{ID_Continue}*'*/u;
   readonly #reWhitespace = /^\p{Pattern_White_Space}+/u;
 
   constructor(input: string) {
-    this.#input = input.trim();
+    this.#input = input;
   }
 
+  /** Lex the input string to produce a stream of tokens. */
   lex(): Token[] {
-    const tokens: Token[] = [];
-    const pushToken = (kind: TokenKind, lexeme: string) => {
-      tokens.push({ kind, lexeme, position: this.#position });
-      this.#position += lexeme.length;
-    };
-
-    while (this.#position < this.#input.length) {
-      const head = this.#peek();
-      switch (head) {
-        case "λ":
-        case "\\":
-          pushToken(TokenKind.Lambda, head);
-          break;
-        case "-":
-          if (this.#peekNext() === ">") {
-            pushToken(
-              TokenKind.RArrow,
-              this.#input.slice(this.#position, this.#position + 2),
-            );
-          } else {
-            throw new SyntaxError(this.#position, "got invalid token -");
-          }
-          break;
-        case "(":
-          pushToken(TokenKind.LParen, head);
-          break;
-        case ")":
-          pushToken(TokenKind.RParen, head);
-          break;
-        default: {
-          const tail = this.#input.slice(this.#position);
-          if (this.#reIdent.test(tail)) {
-            // Impossible by branch condition.
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const ident = tail.match(this.#reIdent)![0];
-            pushToken(TokenKind.Ident, ident);
-          } else if (this.#reWhitespace.test(tail)) {
-            // Impossible by branch condition.
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            this.#position += this.#input
-              .substring(this.#position)
-              .match(this.#reWhitespace)![0].length;
-          } else {
-            throw new SyntaxError(this.#position, `got invalid token ${head}`);
-          }
-          break;
-        }
-      }
+    while (!this.#isAtEnd()) {
+      this.#start = this.#position;
+      this.#lexToken();
     }
 
-    pushToken(TokenKind.EOF, "");
-    return tokens;
+    this.#tokens.push({ kind: TokenKind.EOF, lexeme: "", position: this.#position });
+    return this.#tokens;
   }
 
+  /** Lex a single token. */
+  #lexToken(): void {
+    const char = this.#advance();
+    switch (char) {
+      case "λ":
+      case "\\":
+        this.#pushToken(TokenKind.Lambda);
+        break;
+      case "-": {
+        if (this.#match(">")) {
+          this.#pushToken(TokenKind.RArrow);
+        } else {
+          throw new SyntaxError(this.#start, "got invalid token -");
+        }
+        break;
+      }
+      case "(":
+        this.#pushToken(TokenKind.LParen);
+        break;
+      case ")":
+        this.#pushToken(TokenKind.RParen);
+        break;
+      default: {
+        const tail = this.#input.slice(this.#start);
+        if (this.#reIdent.test(char)) {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          const ident = tail.match(this.#reIdent)![0];
+          this.#position += ident.length - 1;
+          this.#pushToken(TokenKind.Ident);
+        } else if (this.#reWhitespace.test(char)) {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          const whitespace = tail.match(this.#reWhitespace)![0];
+          this.#position += whitespace.length - 1;
+        } else {
+          throw new SyntaxError(this.#start, `got invalid token ${char}`);
+        }
+        break;
+      }
+    }
+  }
+
+  #pushToken(kind: TokenKind): void {
+    this.#tokens.push({
+      kind,
+      lexeme: this.#input.slice(this.#start, this.#position),
+      position: this.#start,
+    });
+  }
+
+  /** Get the current character and advance the lexer. */
+  #advance(): string {
+    return this.#input[this.#position++];
+  }
+
+  /** Get the current character without advancing the lexer. */
   #peek(): string {
     return this.#input[this.#position];
   }
 
-  #peekNext(): string | undefined {
-    const i = this.#position + 1;
-    return i < this.#input.length ? this.#input[i] : undefined;
+  /** Advance the lexer if the current character equals the given character. */
+  #match(char: string): boolean {
+    if (this.#peek() === char) {
+      this.#position += 1;
+      return true;
+    }
+
+    return false;
+  }
+
+  /** Check if the lexer is at the end of the input. */
+  #isAtEnd(): boolean {
+    return this.#position === this.#input.length;
   }
 }

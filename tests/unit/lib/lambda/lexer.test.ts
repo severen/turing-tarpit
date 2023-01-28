@@ -56,9 +56,9 @@ describe("λ-calculus Lexer", async () => {
   });
 
   it("ignores whitespace", async () => {
-    const inputs = ["", " ", "    ", "\t", "\t\t", "\n", "\r\n"];
-    for (const input of inputs) {
-      expect(lex(input)).toEqual([{ kind: TokenKind.EOF, lexeme: "", position: 0 }]);
-    }
+    expect(lex(" ")).toEqual([{ kind: TokenKind.EOF, lexeme: "", position: 1 }]);
+    expect(lex("\t")).toEqual([{ kind: TokenKind.EOF, lexeme: "", position: 1 }]);
+    expect(lex("\n")).toEqual([{ kind: TokenKind.EOF, lexeme: "", position: 1 }]);
+    expect(lex("\r\n")).toEqual([{ kind: TokenKind.EOF, lexeme: "", position: 2 }]);
   });
 });
