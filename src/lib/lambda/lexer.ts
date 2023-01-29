@@ -17,6 +17,12 @@ export type Token = {
 export enum TokenKind {
   /** A `λ` character, or its ASCII stand-in, `\`. */
   Lambda,
+  /** A `let` keyword. */
+  Let,
+  /** A colon equals symbol, `:=`. */
+  ColonEq,
+  /** An `in` keyword. */
+  In,
   /** A right arrow symbol, `->`. */
   RArrow,
   /** A right bracket character, `(`. */
@@ -51,6 +57,11 @@ class Lexer {
   readonly #reIdent = /^\p{ID_Start}\p{ID_Continue}*'*/u;
   readonly #reNatural = /^[0-9]+/u;
   readonly #reWhitespace = /^\p{Pattern_White_Space}+/u;
+
+  readonly #keywords: Map<string, TokenKind> = new Map([
+    ["let", TokenKind.Let],
+    ["in", TokenKind.In],
+  ]);
 
   constructor(input: string) {
     this.#input = input;
@@ -87,6 +98,13 @@ class Lexer {
         }
         break;
       }
+      case ":":
+        if (this.#match("=")) {
+          this.#pushToken(TokenKind.ColonEq);
+        } else {
+          throw new SyntaxError(this.#start, "got invalid token :, expected :=");
+        }
+        break;
       case "(":
         this.#pushToken(TokenKind.LParen);
         break;
@@ -99,7 +117,10 @@ class Lexer {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const ident = tail.match(this.#reIdent)![0];
           this.#position += ident.length - 1;
-          this.#pushToken(TokenKind.Ident);
+          this.#pushToken(
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            !this.#keywords.has(ident) ? TokenKind.Ident : this.#keywords.get(ident)!,
+          );
         } else if (this.#reWhitespace.test(char)) {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const whitespace = tail.match(this.#reWhitespace)![0];

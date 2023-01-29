@@ -20,6 +20,12 @@ describe("λ-calculus Parser", () => {
     );
   });
 
+  it("parses a let term", async () => {
+    expect(parse("let id := \\x -> x in id t")).toEqual(
+      mkApp(mkAbs("id", mkApp(mkVar("id"), mkVar("t"))), mkAbs("x", mkVar("x"))),
+    );
+  });
+
   it("parses an abstraction", async () => {
     expect(parse("\\x -> x")).toEqual(mkAbs("x", mkVar("x")));
   });

@@ -31,11 +31,19 @@ describe("λ-calculus Lexer", async () => {
     ]);
   });
 
-  it("lexes an application", async () => {
-    expect(lex("f x")).toEqual([
-      { kind: TokenKind.Ident, lexeme: "f", position: 0 },
-      { kind: TokenKind.Ident, lexeme: "x", position: 2 },
-      { kind: TokenKind.EOF, lexeme: "", position: 3 },
+  it("lexes a let term", async () => {
+    expect(lex("let id := \\x -> x in id t")).toEqual([
+      { kind: TokenKind.Let, lexeme: "let", position: 0 },
+      { kind: TokenKind.Ident, lexeme: "id", position: 4 },
+      { kind: TokenKind.ColonEq, lexeme: ":=", position: 7 },
+      { kind: TokenKind.Lambda, lexeme: "\\", position: 10 },
+      { kind: TokenKind.Ident, lexeme: "x", position: 11 },
+      { kind: TokenKind.RArrow, lexeme: "->", position: 13 },
+      { kind: TokenKind.Ident, lexeme: "x", position: 16 },
+      { kind: TokenKind.In, lexeme: "in", position: 18 },
+      { kind: TokenKind.Ident, lexeme: "id", position: 21 },
+      { kind: TokenKind.Ident, lexeme: "t", position: 24 },
+      { kind: TokenKind.EOF, lexeme: "", position: 25 },
     ]);
   });
 
@@ -46,6 +54,14 @@ describe("λ-calculus Lexer", async () => {
       { kind: TokenKind.RArrow, lexeme: "->", position: 3 },
       { kind: TokenKind.Ident, lexeme: "x", position: 6 },
       { kind: TokenKind.EOF, lexeme: "", position: 7 },
+    ]);
+  });
+
+  it("lexes an application", async () => {
+    expect(lex("f x")).toEqual([
+      { kind: TokenKind.Ident, lexeme: "f", position: 0 },
+      { kind: TokenKind.Ident, lexeme: "x", position: 2 },
+      { kind: TokenKind.EOF, lexeme: "", position: 3 },
     ]);
   });
 

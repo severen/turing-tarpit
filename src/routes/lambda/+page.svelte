@@ -42,7 +42,9 @@
     <Play />
   </Button>
 
-  <div class="flex-auto bg-surface0 p-2 outline outline-1 outline-overlay2">
+  <div
+    class="flex-auto overflow-auto bg-surface0 p-2 outline outline-1 outline-overlay2"
+  >
     <pre>{t ? prettyPrint(t) : ""}</pre>
   </div>
 </div>

@@ -18,7 +18,8 @@ import {
 import { assert } from "$lib/util";
 
 // In EBNF notation, we implement the following grammar for λ-terms:
-// <term> ::= <abstraction> | <application>
+// <term> ::= <abstraction> | <let> | <application>
+// <let> ::= "let" <identifier> ":=" <term> "in" <term>
 // <abstraction> ::= "\\" <identifier>+ "->" <term>
 // <application> ::= <application> <atom> | <atom>
 // <atom> ::= <variable> | <natural> | "(" <term> ")"
@@ -59,7 +60,14 @@ class Parser {
 
   /** Parse the term nonterminal. */
   #term(): Term {
-    return this.#peek().kind === TokenKind.Lambda ? this.#abs() : this.#app();
+    switch (this.#peek().kind) {
+      case TokenKind.Lambda:
+        return this.#abs();
+      case TokenKind.Let:
+        return this.#let();
+      default:
+        return this.#app();
+    }
   }
 
   /** Parse the abstraction nonterminal. */
@@ -80,6 +88,18 @@ class Parser {
         (body, head) => mkAbs(head, body),
         mkAbs(head[head.length - 1], body),
       );
+  }
+
+  /** Parse the let nonterminal. */
+  #let(): Term {
+    this.#consume(TokenKind.Let);
+    const x = this.#ident();
+    this.#consume(TokenKind.ColonEq);
+    const s = this.#term();
+    this.#consume(TokenKind.In);
+    const t = this.#term();
+
+    return mkApp(mkAbs(x, t), s);
   }
 
   /** Parse the application nonterminal. */
