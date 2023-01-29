@@ -4,15 +4,22 @@
   SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 <script lang="ts">
-  import { Compartment, type Transaction } from "@codemirror/state";
+  import {
+    Compartment,
+    EditorState,
+    StateEffect,
+    type Transaction,
+  } from "@codemirror/state";
   import { EditorView } from "@codemirror/view";
   import { basicSetup } from "codemirror";
   import { onMount } from "svelte";
   import { variants } from "@catppuccin/palette";
 
+  import { page } from "$app/stores";
   import { isDarkTheme } from "$lib/stores/theme";
 
   export let document = "";
+  export let key = `editor${$page.url.pathname}`;
 
   const ctpLatte = variants.latte;
   const ctpMacchiato = variants.macchiato;
@@ -122,20 +129,36 @@
   );
 
   let currentTheme = new Compartment();
-  let editorContainer: Element;
+  let editorContainer: HTMLDivElement;
   onMount(() => {
+    const savedState = localStorage.getItem(key);
+
     const editor = new EditorView({
-      doc: document,
       parent: editorContainer,
-      extensions: [basicSetup, baseTheme, currentTheme.of(lightTheme)],
+
+      doc: document,
+      state: savedState ? EditorState.fromJSON(JSON.parse(savedState)) : undefined,
 
       // TODO: Devise a nicer way to do this, if possible.
       // Intercept all transactions and copy the updated editor state to the
       // exported document property.
       dispatch: (tr: Transaction) => {
         editor.update([tr]);
-        document = editor.state.doc.toString();
+        if (tr.docChanged) {
+          document = editor.state.doc.toString();
+        }
       },
+    });
+
+    // NOTE: The extensions must be set after the fact (i.e. not when creating the
+    // EditorView) because the serialised and saved editor state does not seem to include
+    // the list of extensions.
+    editor.dispatch({
+      effects: StateEffect.appendConfig.of([
+        basicSetup,
+        baseTheme,
+        currentTheme.of(lightTheme),
+      ]),
     });
 
     isDarkTheme.subscribe((isDarkTheme) => {
@@ -149,9 +172,10 @@
     // Focus the editor so that the user can immediately begin typing after page load.
     editor.focus();
 
-    // TODO: Persist the editor state for each editor across navigation and (maybe?)
-    //       reloads.
-    return () => editor.destroy();
+    return () => {
+      localStorage.setItem(key, JSON.stringify(editor.state.toJSON()));
+      editor.destroy();
+    };
   });
 </script>
 
