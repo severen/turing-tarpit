@@ -10,6 +10,7 @@ import {
   mkApp,
   mkVar,
   SyntaxError,
+  toChurch,
   type Abs,
   type Term,
   type Var,
@@ -20,7 +21,7 @@ import { assert } from "$lib/util";
 // <term> ::= <abstraction> | <application>
 // <abstraction> ::= "\\" <identifier>+ "->" <term>
 // <application> ::= <application> <atom> | <atom>
-// <atom> ::= <variable> | "(" <term> ")"
+// <atom> ::= <variable> | <natural> | "(" <term> ")"
 // <variable> ::= <identifier>
 
 /** Parse a λ-calculus term. */
@@ -84,7 +85,9 @@ class Parser {
   /** Parse the application nonterminal. */
   #app(): Term {
     const isAtomPrefix = (token: Token): boolean =>
-      token.kind === TokenKind.LParen || token.kind === TokenKind.Ident;
+      token.kind === TokenKind.LParen ||
+      token.kind === TokenKind.Ident ||
+      token.kind === TokenKind.Natural;
 
     let lhs = this.#atom();
     while (isAtomPrefix(this.#peek())) {
@@ -98,7 +101,7 @@ class Parser {
   /** Parse the atom nonterminal. */
   #atom(): Term {
     if (this.#peek().kind !== TokenKind.LParen) {
-      return this.#var();
+      return this.#peek().kind === TokenKind.Ident ? this.#var() : this.#natural();
     }
 
     this.#consume(TokenKind.LParen);
@@ -124,12 +127,19 @@ class Parser {
     return ident;
   }
 
+  /** Parse a natural number. */
+  #natural(): Term {
+    const token = this.#peek();
+    this.#consume(TokenKind.Natural);
+    return toChurch(parseInt(token.lexeme));
+  }
+
   /** Get the token at the current position of the parser. */
   #peek(): Token {
     return this.#tokens[this.#position];
   }
 
-  /** Assert the presence of a token and advance the lexer. */
+  /** Assert the presence of a token and advance the parser. */
   #consume(kind: TokenKind) {
     const token = this.#peek();
     if (token.kind === kind) {
@@ -152,11 +162,14 @@ class Parser {
         case TokenKind.Ident:
           wanted = "an identifier";
           break;
+        case TokenKind.Natural:
+          wanted = "a natural number";
+          break;
         case TokenKind.EOF:
           wanted = "end of file";
           break;
       }
-      throw new SyntaxError(this.#position, `${wanted} was expected`);
+      throw new SyntaxError(token.position, `${wanted} was expected`);
     }
   }
 }

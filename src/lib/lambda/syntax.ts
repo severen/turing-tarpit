@@ -123,3 +123,13 @@ export function prettyPrint(t: Term): Name {
     }
   }
 }
+
+/** Convert a natural number to its corresponding Church numeral. */
+export function toChurch(n: number): Abs {
+  let t: Term = mkVar("x");
+  for (let i = 0; i < n; ++i) {
+    t = mkApp(mkVar("f"), t);
+  }
+
+  return mkAbs("f", mkAbs("x", t));
+}

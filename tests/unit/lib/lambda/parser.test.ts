@@ -14,6 +14,12 @@ describe("λ-calculus Parser", () => {
     expect(parse("x")).toEqual(mkVar("x"));
   });
 
+  it("parses a natural number", async () => {
+    expect(parse("2")).toEqual(
+      mkAbs("f", mkAbs("x", mkApp(mkVar("f"), mkApp(mkVar("f"), mkVar("x"))))),
+    );
+  });
+
   it("parses an abstraction", async () => {
     expect(parse("\\x -> x")).toEqual(mkAbs("x", mkVar("x")));
   });

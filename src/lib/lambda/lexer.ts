@@ -25,6 +25,8 @@ export enum TokenKind {
   RParen,
   /** An identifier. */
   Ident,
+  /** A natural number literal. */
+  Natural,
   /** A marker for the end of a file. */
   EOF,
 }
@@ -47,6 +49,7 @@ class Lexer {
   #tokens: Token[] = [];
 
   readonly #reIdent = /^\p{ID_Start}\p{ID_Continue}*'*/u;
+  readonly #reNatural = /^[0-9]+/u;
   readonly #reWhitespace = /^\p{Pattern_White_Space}+/u;
 
   constructor(input: string) {
@@ -101,6 +104,11 @@ class Lexer {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const whitespace = tail.match(this.#reWhitespace)![0];
           this.#position += whitespace.length - 1;
+        } else if (this.#reNatural.test(char)) {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          const natural = tail.match(this.#reNatural)![0];
+          this.#position += natural.length - 1;
+          this.#pushToken(TokenKind.Natural);
         } else {
           throw new SyntaxError(this.#start, `got invalid token ${char}`);
         }

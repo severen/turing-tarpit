@@ -24,6 +24,13 @@ describe("λ-calculus Lexer", async () => {
     ]);
   });
 
+  it("lexes a natural number", async () => {
+    expect(lex("1729")).toEqual([
+      { kind: TokenKind.Natural, lexeme: "1729", position: 0 },
+      { kind: TokenKind.EOF, lexeme: "", position: 4 },
+    ]);
+  });
+
   it("lexes an application", async () => {
     expect(lex("f x")).toEqual([
       { kind: TokenKind.Ident, lexeme: "f", position: 0 },
