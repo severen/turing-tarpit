@@ -24,15 +24,20 @@
   import { tm_read_result_display, tm_state_display } from "$lib/turing/display";
   import GraphCanvas from "$lib/components/GraphCanvas.svelte";
   import {
+    graph_from_tm,
     init_tm_graph,
     instructions_from_graph,
     type Edge,
     type Node,
+    type TM_Graph,
   } from "$lib/turing/graph/logic";
+  import {
+    instructions_to_adjacency_matrix,
+    spectral_barycenter,
+  } from "$lib/turing/graph/spectral";
 
   let document: string;
-  let instructions: string;
-  let graph = init_tm_graph();
+  let graph: TM_Graph = init_tm_graph();
 
   let tape_input_string = "";
   let tm_display_string = "";
@@ -46,9 +51,7 @@
 
   function initialize() {
     if (!text_input) {
-      instructions = instructions;
       document = instructions_from_graph(graph);
-      console.log(instructions);
     }
     const result = read_transition_table(document);
     tm_display_string = tm_read_result_display(document, result);
@@ -139,6 +142,7 @@
   }
 
   function switch_input_mode() {
+    graph = graph_from_tm(tm, document);
     text_input = !text_input;
   }
 </script>

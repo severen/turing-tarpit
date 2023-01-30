@@ -67,7 +67,7 @@ export function edge_label_bounding_box(
   let label: Vec2d;
   const label_dims = context.measureText(edge.label);
   const h = Math.abs(edge.h) > SNAP_THRESHOLD ? edge.h : 0;
-  if (edge.head.id !== edge.tail.id) {
+  if (edge.head.label !== edge.tail.label) {
     const p1 = edge.tail.pos;
     const p2 = edge.head.pos;
     const v = normed(minus(p2, p1));
@@ -216,9 +216,9 @@ export function draw_edge(
   edge: Edge,
   node_radius: number,
 ) {
-  if (Math.abs(edge.h) <= SNAP_THRESHOLD && edge.tail.id !== edge.head.id) {
+  if (Math.abs(edge.h) <= SNAP_THRESHOLD && edge.tail.label !== edge.head.label) {
     draw_straight_edge(context, edge, node_radius);
-  } else if (edge.head.id === edge.tail.id) {
+  } else if (edge.head.label === edge.tail.label) {
     draw_self_edge(context, edge, node_radius);
   } else {
     draw_arced_edge(context, edge, node_radius);
