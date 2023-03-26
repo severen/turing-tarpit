@@ -310,5 +310,5 @@
   bind:this={canvas}
   {width}
   {height}
-  class="mr-2 border-2  dark:border-gray-300 dark:bg-gray-800 dark:text-white"
+  class="mr-2 border-2 dark:border-gray-300 dark:bg-gray-800 dark:text-white"
 />
