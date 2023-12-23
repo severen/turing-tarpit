@@ -14,6 +14,6 @@ export default {
   preprocess: vitePreprocess(),
 
   kit: {
-    adapter: netlifyAdapter(),
+    adapter: netlifyAdapter({ edge: true }),
   },
 };
