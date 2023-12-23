@@ -5,10 +5,10 @@
 -->
 <script lang="ts">
   export let title: string | undefined = undefined;
-  export let values: { name: string; value: any }[];
+  export let values: { name: string; value: unknown }[];
   export let color: "red" | "green" | undefined = undefined;
 
-  export let value: any;
+  export let value: unknown;
 
   let colorClasses: string;
   switch (color) {

@@ -25,7 +25,8 @@ describe("home page", async () => {
   afterAll(async () => {
     await browser.close();
     await new Promise<void>((resolve, reject) => {
-      server.httpServer.close((error) => (error ? reject(error) : resolve()));
+      // TODO: Figure out a more specific type for the error parameter.
+      server.httpServer.close((error: unknown) => (error ? reject(error) : resolve()));
     });
   });
 

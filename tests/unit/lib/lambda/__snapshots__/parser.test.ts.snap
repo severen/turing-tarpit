@@ -1,5 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`λ-calculus Parser > consumes the entire input 1`] = `"got invalid token ; (at position 25)"`;
+exports[`λ-calculus Parser > consumes the entire input 1`] = `[SyntaxError: got invalid token ; (at position 25)]`;
 
-exports[`λ-calculus Parser > does not parse the empty string 1`] = `"unexpected EOF (at position 0)"`;
+exports[`λ-calculus Parser > does not parse the empty string 1`] = `[SyntaxError: unexpected EOF (at position 0)]`;

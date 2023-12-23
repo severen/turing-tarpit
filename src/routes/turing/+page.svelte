@@ -19,12 +19,7 @@
   } from "$lib/turing/tm";
   import { tm_read_result_display, tm_state_display } from "$lib/turing/display";
   import GraphCanvas from "$lib/components/GraphCanvas.svelte";
-  import {
-    init_tm_graph,
-    instructions_from_graph,
-    type Edge,
-    type Node,
-  } from "$lib/turing/graph/logic";
+  import { init_tm_graph, instructions_from_graph } from "$lib/turing/graph/logic";
 
   let document: string;
   let instructions: string;

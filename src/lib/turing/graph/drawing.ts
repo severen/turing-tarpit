@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import { getContext, onMount, onDestroy } from "svelte";
-import { writable, derived } from "svelte/store";
+import { writable } from "svelte/store";
 
 import {
   minus,

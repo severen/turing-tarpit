@@ -4,7 +4,7 @@
   SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 <script lang="ts">
-  import { onMount, onDestroy, setContext } from "svelte";
+  import { onMount } from "svelte";
   import {
     width,
     height,
@@ -30,7 +30,6 @@
     bearing_from_node,
     on_left,
     instructions_from_graph,
-    type TM_Graph,
     above,
     init_tm_graph,
   } from "$lib/turing/graph/logic";
@@ -100,7 +99,7 @@
     context.lineWidth = 2;
 
     //Draw edges
-    for (const [i, edge] of graph.edges.entries()) {
+    for (const [, edge] of graph.edges.entries()) {
       draw_edge(context, edge, node_radius);
     }
 
@@ -171,7 +170,7 @@
     }
   }
 
-  function handle_mouse_down(event: any) {
+  function handle_mouse_down() {
     mouse_down = true;
     const selected_node_index = selected_node(graph.nodes, mouse);
     const selected_edge_index = selected_edge(graph.edges, mouse);
@@ -223,7 +222,7 @@
     redraw();
   }
 
-  function handle_mouse_up(event: any) {
+  function handle_mouse_up(event: { clientX: number; clientY: number }) {
     handle_mouse_move(event);
     const i = selected_node(graph.nodes, mouse);
     const j = selected_edge(graph.edges, mouse);
@@ -251,7 +250,7 @@
     redraw();
   }
 
-  function handle_key_down(event: any) {
+  function handle_key_down(event: { key: string }) {
     const key_down = event.key;
     if (key_down === "d") {
       console.log(instructions_from_graph(graph));
